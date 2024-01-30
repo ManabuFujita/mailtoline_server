@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../Config.php');
+require_once(__DIR__ . '/../config.php');
 Config::setConfigDirectory(__DIR__ . '/../config');
 
 class Mail_gmail
