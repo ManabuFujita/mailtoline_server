@@ -39,7 +39,7 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 
 
 // test
-// echo '<br>';
+echo 'ok';
 $db = new Mail_gmail;
 $list = $db->getAllGmail();
 
