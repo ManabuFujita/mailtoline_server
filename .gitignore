@@ -21,3 +21,11 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+token.json
+runCron.sh
+credentials.json
+lib/connectDB_____.php
+lib/ConnectDB.php
+logCron.txt
+logSend.txt
+config/common.php
