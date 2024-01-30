@@ -5,7 +5,7 @@
 // $line_channel_access_token = 'JF/o5ZHzJtlJcnV6SP6UlADXHCSzlFqYXx1JzKZzxJjhQEmYyFrbn0M990e7LMqHMIZBIFGzXjx888RabDwwuB4m/u+EcnooAQef6jvF4fCZPiJCHxdfdyvGS+lq3gRWgo1kAuA7pIW+lDGexPVS7wdB04t89/1O/w1cDnyilFU=';
 // $line_channel_secret = '269971a7bda5dc1dd5ee41e2a62055ef';
 
-require_once 'Config.php';
+require_once("./Config.php");
 Config::setConfigDirectory(__DIR__ . '/config');
 
 $line_channel_access_token = Config::get('line_channel_access_token');
