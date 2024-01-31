@@ -140,17 +140,6 @@ class Mail_gmail
       $stmh = $this->pdo->query($sql);
 
       $list = $stmh->fetchAll(PDO::FETCH_ASSOC);
-      
-
-
-
-      echo '<br>';
-      echo 'filter';
-      echo '<pre>';
-      print_r($list);
-      echo '</pre>';
-      echo '<br>';
-
 
       return $list;
 

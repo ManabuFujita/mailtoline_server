@@ -1,21 +1,10 @@
-#!/usr/local/php/8.2/lib/php
 <?php
-
-// Token
-// $line_channel_access_token = 'JF/o5ZHzJtlJcnV6SP6UlADXHCSzlFqYXx1JzKZzxJjhQEmYyFrbn0M990e7LMqHMIZBIFGzXjx888RabDwwuB4m/u+EcnooAQef6jvF4fCZPiJCHxdfdyvGS+lq3gRWgo1kAuA7pIW+lDGexPVS7wdB04t89/1O/w1cDnyilFU=';
-// $line_channel_secret = '269971a7bda5dc1dd5ee41e2a62055ef';
 
 require_once(__DIR__ . "/config.php");
 Config::setConfigDirectory(__DIR__ . '/config');
 
 $line_channel_access_token = Config::get('line_channel_access_token');
 $line_channel_secret = Config::get('line_channel_secret');
-
-// 対象のメールアドレス
-// $targetMailAddress = 'admin@pa.e-kakushin.com';
-// $targetMailAddress = 'notifications@github.com';
-// 通知メッセージ
-// $msgNotification = '安否確認が届いているかもです！（違ったらすみません。）';
 
 //LINESDKの読み込み
 require_once('vendor/autoload.php');
@@ -37,61 +26,32 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
   return;
 }
 
-
-// test
-echo 'ok';
+// メールアドレスリスト取得
 $db = new Mail_gmail;
-$list = $db->getAllGmail();
-
+$emailList = $db->getAllGmail();
 // echo '<pre>';  
 // print_r($list);
 // echo '</pre>';
 
+
 // 登録メールアドレスのトークン更新処理
-// 無条件で更新する
-foreach ($list as $l)
-{
-  $lineId = $l['line_id'];
-  $email = $l['email'];
-  $token = getToken($l);
+// 全メールアドレスについて、期限が切れてたら更新する
+updateTokens($db, $emailList);
+// foreach ($list as $l)
+// {
+//   $lineId = $l['line_id'];
+//   $email = $l['email'];
+//   $token = getToken($l);
 
-  // echo '<pre>';  
-  // print_r($token);
-  // echo '</pre>';
+//   // echo '<pre>';  
+//   // print_r($token);
+//   // echo '</pre>';
 
-  // トークンは更新しづづける
-  updateToken($db, $lineId, $email, $token);
-}
+//   // トークンは更新しづづける
+//   updateToken($db, $lineId, $email, $token);
+// }
 
-function getToken($l)
-{
-  // $lineId = $l['line_id'];
-  // $email = $l['email'];
 
-  $accessToken = $l['access_token']; 
-  $refreshToken = $l['refresh_token'];
-  $idToken = $l['id_token'];
-  $expiresIn = $l['expires_in'];
-  // $created_datetime = new Datetime($l['created']);
-  // $created = $created_datetime->getTimestamp();
-
-  if ($l['created'] != null)
-  {
-    $created = datetimeFormat2timestamp($l['created']);
-  } else {
-    $created = null;
-  }
-
-  $token = [
-    'access_token' => $accessToken,
-    'expires_in' => $expiresIn,
-    'id_token' => $idToken,
-    'created' => $created,
-    'refresh_token' => $refreshToken,
-  ];
-
-  return $token;
-}
 
 
 echo '<br>';
@@ -125,18 +85,15 @@ echo "<br>";
 
 // メールフィルター転送処理
 $filters = $db->getAllFilterWithToken();
-
-
-// $list = $db->getAllGmail();
 foreach ($filters as $f)
 {
   $gmailAddress = $f['email'];
   $lineId = $f['line_id'];
   $token = getToken($f);
 
-  echo '<pre>';  
-  print_r($token);
-  echo '</pre>';
+  // echo '<pre>';  
+  // print_r($token);
+  // echo '</pre>';
 
   // 必要があれば処理を続ける
   $client = getGmailClient($token);
@@ -144,17 +101,8 @@ foreach ($filters as $f)
 
   $filter_mailfrom = $f['mail_from'];
   $filter_subject = $f['subject'];
-  echo $filter_mailfrom;
-  echo $filter_subject;
 
 
-  // ファイル処理
-  // $fileSend = new FuncFile("logSend.txt");
-  // $fileCron = new FuncFile("logCron.txt");
-
-  // cron実行時, ログ書き出し
-  // $dateTimeNow = date($dateFormatCronLog);
-  // $fileCron->writeFileAdd($dateTimeNow);
 
   // 今日受信した対象メールを取得
   // $client = getClient();
@@ -183,24 +131,9 @@ foreach ($filters as $f)
   $filter_results = $service->users_messages->listUsersMessages($user, $optParams);
   $resultsCount = $filter_results['resultSizeEstimate'];
 
-  // // 昨日の対象メール数を取得
-  // $optParams['q'] = 'from:'.$targetMailAddress.' after:'.$yesterdayYMD.' before:'.$todayYMD;
-  // $results = $service->users_messages->listUsersMessages($user, $optParams);
-  // $cntTargetRecievedYesterday = $results['resultSizeEstimate'];
-
-  // // 今日の対象メール数を取得
-  // $optParams['q'] = 'from:'.$targetMailAddress.' after:'.$todayYMD.' before:'.$tomorrowYMD;
-  // $results = $service->users_messages->listUsersMessages($user, $optParams);
-  // $cntTargetRecievedToday = $results['resultSizeEstimate'];
-
-  // $cntTargetRecievedTotal = $cntTargetRecievedYesterday
-  //                         + $cntTargetRecievedToday;
-
-
-
-  echo '<pre>';  
-  print_r($filter_results);
-  echo '</pre>';
+  // echo '<pre>';  
+  // print_r($filter_results);
+  // echo '</pre>';
 
 
 
@@ -217,9 +150,8 @@ foreach ($filters as $f)
     foreach ($filter_results->getMessages() as $r)
     {
       $mailId = $r->getId();
-      echo '<pre>';  
-      print_r($mailId);
-      echo '</pre>';
+      echo "<br>";
+      echo "mailId:" . $mailId;
 
       // 送信済みチェック
       // 同一IDは再送しない
@@ -234,31 +166,7 @@ foreach ($filters as $f)
         $mail = $service->users_messages->get($user, $mailId);
         $headers = $mail->payload->headers;
 
-        // 結果からデータを抽出
-        // $subject_key = array_search('Subject', array_column($headers, 'name')); // ヘッダーオブジェクトの配列から件名オブジェクトの連番キーを取得
-        // $subject = $headers[$subject_key]->value; // 件名のオブジェクトからvalueプロパティの値を取得（件名の取得）
-
-        // $date_key = array_search('Date', array_column($headers, 'name'));
-        // $date = $headers[$date_key]->value;
-
-        // $from_key = array_search('From', array_column($headers, 'name'));
-        // $from = $headers[$from_key]->value;
-
-        // $to_key = array_search('To', array_column($headers, 'name'));
-        // $to = $headers[$to_key]->value;
-
-        //     // $date_str = "Fri, 26 Jan 2024 02:15:18 +0000 (UTC)";
-
-        // $date = preg_replace('/\s\(\w{3}\)/', '', $date); // " (UTC)"を除く
-
-        // // 配列にセット
-        // array_push($filter_list, [
-        //     'subject' => $subject,
-        //     'date' => DateTime::createFromFormat(DateTimeInterface::RFC2822, $date)->format('Y/m/d H:i:s'),
-        //     'from' => $from,
-        //     'to' => $to,
-        // ]);
-
+        // データを処理しやすい形に抽出
         $data = getData($headers);
 
         if ($messages != '')
@@ -275,33 +183,31 @@ foreach ($filters as $f)
 
 
         // DB登録
-        echo '<br>';
-        echo 'DB登録';
-        echo '<br>';
-
-        $title = '';
-        $from = '';
-        $body = '';
-
-        // $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from']);
+        // echo '<br>';
+        // echo 'DB登録';
+        // echo '<br>';
+        $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from']);
       }
 
     }
 
-            // Line通知
-            echo '<br>';
-            echo 'Line通知';
-            echo '<br>';
+    // Line通知
+    if ($messages != '')
+    {
+      echo '<br>';
+      echo 'Line通知';
+      echo '<br>';
 
-            $messages 
-              = '【メール通知】' . "\n" 
-              . "\n" 
-              . $messages;
-    
-            // echo '<pre>';  
-            // print_r($filter_list);
-            // echo '</pre>';
-            push($lineId, $messages);
+      $messages 
+        = '【メール通知】' . "\n" 
+        . "\n" 
+        . $messages;
+
+      // echo '<pre>';  
+      // print_r($filter_list);
+      // echo '</pre>';
+      push($lineId, $messages);
+    }
   }
 }
 
@@ -334,201 +240,6 @@ function getData($headers)
 
 return;
 
-// // メールフィルター転送処理
-// $filters = $db->getAllFilterWithToken();
-
-
-// $list = $db->getAllGmail();
-// foreach ($list as $l)
-// {
-//   $token = getToken($l);
-
-
-//   // 必要があれば処理を続ける
-//   $client = getGmailClient($token);
-
-//   $gmailAddress = $l['email'];
-//   $lineId = $l['line_id'];
-
-
-
-//   // ファイル処理
-//   $fileSend = new FuncFile("logSend.txt");
-//   $fileCron = new FuncFile("logCron.txt");
-
-//   // cron実行時, ログ書き出し
-//   $dateTimeNow = date($dateFormatCronLog);
-//   $fileCron->writeFileAdd($dateTimeNow);
-
-//   // 今日受信した対象メールを取得
-//   // $client = getClient();
-//   $service = new Google_Service_Gmail($client);
-
-//   $user = 'me';
-//   $optParams = [];
-
-//   // 昨日の対象メール数を取得
-//   $optParams['q'] = 'from:'.$targetMailAddress.' after:'.$yesterdayYMD.' before:'.$todayYMD;
-//   $results = $service->users_messages->listUsersMessages($user, $optParams);
-//   $cntTargetRecievedYesterday = $results['resultSizeEstimate'];
-
-//   // 今日の対象メール数を取得
-//   $optParams['q'] = 'from:'.$targetMailAddress.' after:'.$todayYMD.' before:'.$tomorrowYMD;
-//   $results = $service->users_messages->listUsersMessages($user, $optParams);
-//   $cntTargetRecievedToday = $results['resultSizeEstimate'];
-
-//   $cntTargetRecievedTotal = $cntTargetRecievedYesterday
-//                           + $cntTargetRecievedToday;
-
-
-
-//                           echo '<pre>';  
-//                           print_r($results);
-//                           echo '</pre>';
-
-
-
-//   // 対象メールがなければ終了
-//   echo '<br>';
-//   echo '昨日〜今日の通知対象メール数：'.$cntTargetRecievedTotal.'件<br>';
-//   if ($cntTargetRecievedTotal == 0)
-//   {
-//     echo "今日は通知対象のメールがありません。";
-//     return;
-//   }
-
-//   foreach ($results as $r)
-//   {
-//     $mailId = $r['id'];
-//     echo '<br>';
-//     echo $mailId;
-//     echo '<br>';
-
-//     // 送信済みチェック
-//     // 同一IDは再送しない
-//     if ($db->isSended($lineId, $gmailAddress, $mailId))
-//     {
-//       echo '<br>';
-//       echo '通知済み';
-//       echo '<br>';
-//     } else {
-
-//       // ToDo:メール内容取得
-
-//       // Line通知
-//       echo '<br>';
-//       echo 'Line通知';
-//       echo '<br>';
-//       // push($lineId, 'test');
-
-
-//       // DB登録
-//       echo '<br>';
-//       echo 'DB登録';
-//       echo '<br>';
-
-//       $title = '';
-//       $from = '';
-//       $body = '';
-
-//       $db->insertSendlog($lineId, $gmailAddress, $mailId, $title, $from, $body);
-//     }
-
-//   }
-// }
-
-// $db->connect();
-// $db->setTableName("gmails");
-// $db->showTables();
-
-return;
-
-// // 日付取得
-// $dateFormatSendLog = 'Y/m/d';
-// $dateFormatCronLog = 'Y/m/d H:i:s';
-// date_default_timezone_set('Asia/Tokyo');
-// $todayYMD = date($dateFormatSendLog);
-// $yesterdayYMD = date($dateFormatSendLog, strtotime('-1 day'));
-// $tomorrowYMD = date($dateFormatSendLog, strtotime('+1 day'));
-
-// // ファイル処理
-// $fileSend = new FuncFile("logSend.txt");
-// $fileCron = new FuncFile("logCron.txt");
-
-// // cron実行時, ログ書き出し
-// $dateTimeNow = date($dateFormatCronLog);
-// $fileCron->writeFileAdd($dateTimeNow);
-
-// // 今日受信した対象メールを取得
-// $client = getClient();
-// $service = new Google_Service_Gmail($client);
-
-// $user = 'me';
-// $optParams = [];
-
-// // 昨日の対象メール数を取得
-// $optParams['q'] = 'from:'.$targetMailAddress.' after:'.$yesterdayYMD.' before:'.$todayYMD;
-// $results = $service->users_messages->listUsersMessages($user, $optParams);
-// $cntTargetRecievedYesterday = $results['resultSizeEstimate'];
-
-// // 今日の対象メール数を取得
-// $optParams['q'] = 'from:'.$targetMailAddress.' after:'.$todayYMD.' before:'.$tomorrowYMD;
-// $results = $service->users_messages->listUsersMessages($user, $optParams);
-// $cntTargetRecievedToday = $results['resultSizeEstimate'];
-
-// $cntTargetRecievedTotal = $cntTargetRecievedYesterday
-//                         + $cntTargetRecievedToday;
-
-// // 対象メールがなければ終了
-// echo '<br>';
-// echo '昨日〜今日の通知対象メール数：'.$cntTargetRecievedTotal.'件<br>';
-// if ($cntTargetRecievedTotal == 0)
-// {
-//   echo "今日は通知対象のメールがありません。";
-//   return;
-// }
-
-// // 通知ロク取得
-// $fileSendArray = $fileSend->getFileArray();
-// // 通知ログから昨日の通知数を取得
-// $cntSendedYesterday = is_null($fileSendArray) ? 0 : countifArray($fileSendArray, $yesterdayYMD);
-// // 通知ログから今日の通知数を取得
-// $cntSendedToday = is_null($fileSendArray) ? 0 : countifArray($fileSendArray, $todayYMD);
-
-// $cntSendedTotal = $cntSendedYesterday
-//                 + $cntSendedToday;
-
-// echo '昨日〜今日の送信済みの通知数：'.$cntSendedTotal.'件<br>';
-// echo '↓<br>';
-
-// // 新規対象メールがあるかチェック
-// if($cntTargetRecievedTotal > $cntSendedTotal)
-// {
-//   // 未通知あり
-//   // broadcast($msgNotification);
-//   echo 'LINE通知を送信しました。';
-// } else {
-//   // 全て通知済み
-//   echo '昨日〜今日は全て通知済みです。';
-//   return;
-// }
-
-// // 未通知が昨日のメールの場合、通知ログに昨日の日付を追記
-// if($cntTargetRecievedYesterday > $cntSendedYesterday)
-// {
-//   writeSendLog($yesterdayYMD);
-//   return;
-// }
-
-// // 未通知が今日のメールの場合、通知ログに今日に日付を追記
-// if($cntTargetRecievedToday > $cntSendedToday)
-// {
-//   writeSendLog($todayYMD);
-//   return;
-// }
-
-return;
-
 // -----------------------------------------------------------------------------
 
 function writeSendLog($message)
@@ -547,7 +258,7 @@ function reply()
   //LINEBOTにPOSTで送られてきた生データの取得
   $inputData = file_get_contents("php://input");
 
-  $fileSend->writeFileAdd($inputData);
+  // $fileSend->writeFileAdd($inputData);
 
   //LINEBOTSDKの設定
   $httpClient = new CurlHTTPClient($line_channel_access_token);
@@ -618,6 +329,19 @@ function newGmailClient()
   return $client;
 }
 
+function updateTokens($db, $emailList)
+{
+  foreach ($emailList as $l)
+  {
+    $lineId = $l['line_id'];
+    $email = $l['email'];
+    $token = getToken($l);
+
+    // トークンは更新しづづける
+    updateToken($db, $lineId, $email, $token);
+  }
+}
+
 function updateToken($db, $lineId, $email, $token)
 {
   $client = newGmailClient();
@@ -629,12 +353,12 @@ function updateToken($db, $lineId, $email, $token)
   echo $email;
 
   
-  echo '<br>';
-  echo '更新前';
-  echo '<pre>';
-  print_r($token);
-  echo '</pre>';
-  echo '<br>';
+  // echo '<br>';
+  // echo '更新前';
+  // echo '<pre>';
+  // print_r($token);
+  // echo '</pre>';
+  // echo '<br>';
 
   // If there is no previous token or it's expired.
   if ($client->isAccessTokenExpired()) 
@@ -649,12 +373,12 @@ function updateToken($db, $lineId, $email, $token)
 
         $token = $client->getAccessToken();
 
-        echo '<br>';
-        echo '更新後';
-        echo '<pre>';
-        print_r($token);
-        echo '</pre>';
-        echo '<br>';
+        // echo '<br>';
+        // echo '更新後';
+        // echo '<pre>';
+        // print_r($token);
+        // echo '</pre>';
+        // echo '<br>';
 
 
 
@@ -666,17 +390,6 @@ function updateToken($db, $lineId, $email, $token)
         $created = timestamp2datetime($token['created']);
 
 
-
-        // echo '<br>';
-        // echo $accessToken;
-        // echo '<br>';
-
-        // echo '<pre>';
-        // print_r($token);
-        // echo '</pre>';
-        // echo '<br>';
-        // echo $refreshToken;
-        // echo '<br>';
 
         $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
         echo '<br>';
@@ -690,27 +403,39 @@ function updateToken($db, $lineId, $email, $token)
   }
 }
 
+function getToken($l)
+{
+  // $lineId = $l['line_id'];
+  // $email = $l['email'];
+
+  $accessToken = $l['access_token']; 
+  $refreshToken = $l['refresh_token'];
+  $idToken = $l['id_token'];
+  $expiresIn = $l['expires_in'];
+  // $created_datetime = new Datetime($l['created']);
+  // $created = $created_datetime->getTimestamp();
+
+  if ($l['created'] != null)
+  {
+    $created = datetimeFormat2timestamp($l['created']);
+  } else {
+    $created = null;
+  }
+
+  $token = [
+    'access_token' => $accessToken,
+    'expires_in' => $expiresIn,
+    'id_token' => $idToken,
+    'created' => $created,
+    'refresh_token' => $refreshToken,
+  ];
+
+  return $token;
+}
+
 function getGmailClient($token)
 {
-    // $client = new Google_Client();
-    // $client->setApplicationName('Gmail API PHP Quickstart');
-    // $client->setScopes(Google_Service_Gmail::GMAIL_READONLY);
-    // $client->setAuthConfig('credentials.json');
-    // $client->setAccessType('offline');
-    // $client->setPrompt('select_account consent');
-
     $client = newGmailClient();
-
-    // Load previously authorized token from a file, if it exists.
-    // The file token.json stores the user's access and refresh tokens, and is
-    // created automatically when the authorization flow completes for the first
-    // time.
-    // $tokenPath = 'token.json';
-    // if (file_exists($tokenPath)){
-    //     $accessToken = json_decode(file_get_contents($tokenPath), true);
-    //     $client->setAccessToken($accessToken);
-    // }
-
     $client->setAccessToken($token);
 
     // If there is no previous token or it's expired.
@@ -741,11 +466,11 @@ function getGmailClient($token)
         // file_put_contents($tokenPath, json_encode($client->getAccessToken()));
 
         echo '<br>';
-        echo 'tokenを更新しました。';
+        echo 'tokenを更新しました。(getGmailClient)';
         echo '<br>';
     } else {
       echo '<br>';
-      echo 'tokenの更新不要。';
+      echo 'tokenの更新不要。(getGmailClient)';
       echo '<br>';
     }
     return $client;
@@ -811,15 +536,15 @@ function getClient_bak()
     return $client;
 }
 
-function countifArray($array, $find)
-{
-  $cntMatch = 0;
-  foreach($array as $elem)
-  {
-    if(trim($elem) == $find) $cntMatch++;
-  }
-  return $cntMatch;
-}
+// function countifArray($array, $find)
+// {
+//   $cntMatch = 0;
+//   foreach($array as $elem)
+//   {
+//     if(trim($elem) == $find) $cntMatch++;
+//   }
+//   return $cntMatch;
+// }
 
 function datetimeFormat2timestamp($datetime_format)
 {
