@@ -91,7 +91,8 @@ foreach ($filters as $f)
   $lineId = $f['line_id'];
   $token = getToken($f);
 
-
+  echo "<br>";
+  echo "*******************************************";
   echo "mail:" . $gmailAddress;
   echo "<br>";
 
