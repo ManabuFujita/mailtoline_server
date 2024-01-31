@@ -92,7 +92,7 @@ foreach ($filters as $f)
   $token = getToken($f);
 
   echo "<br>";
-  echo "*******************************************";
+  echo "*******************************************<br>";
   echo "mail:" . $gmailAddress;
   echo "<br>";
 
