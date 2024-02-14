@@ -312,12 +312,15 @@ function reply()
     {
     
       case '転送フィルター設定確認':
-        $replyMessage = $event['source']['userId'];
+        // $replyMessage = $event['source']['userId'];
+        break;
+
+      case 'あ':
+        $replyMessage = $userId;
         break;
 
       default:
         $replyMessage = '2下のメニューボタンから操作してください。';
-        $replyMessage .= $userId;
         break;
     }
 
