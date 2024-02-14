@@ -29,3 +29,5 @@ lib/ConnectDB.php
 logCron.txt
 logSend.txt
 config/common.php
+.htaccess
+.htpasswd
