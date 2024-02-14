@@ -22,7 +22,18 @@ date_default_timezone_set('Asia/Tokyo');
 //LINEから送られてきたらtrueになる（Webhook用）
 if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 {
-  reply();
+  // リクエストヘッダーの x-line-signature を取得
+  $signature = $_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE];
+
+  // リクエストボディを取得
+  $request_body = file_get_contents('php://input');
+
+  // 署名が正しい場合
+  if (validate_signature($request_body, $signature)) 
+  {
+    reply();
+  }
+
   return;
 }
 
@@ -255,6 +266,21 @@ function writeSendLog($message)
   $fileSend->writeFileAdd($message);
 }
 
+// 署名を検証する関数
+function validate_signature($body, $signature) 
+{
+  global $line_channel_access_token;
+  global $line_channel_secret;
+
+  // ダイジェスト値を計算
+  $hash = hash_hmac('sha256', $body, $line_channel_secret, true);
+  // Base64エンコード
+  $base64_hash = base64_encode($hash);
+  // 署名と一致するかチェック
+  return $base64_hash === $signature;
+}
+
+
 function reply()
 {
   global $line_channel_access_token;
@@ -283,7 +309,7 @@ function reply()
     {
     
       case '転送フィルター設定確認':
-        $replyMessage = $events;
+        $replyMessage = $event;
         break;
 
       default:
