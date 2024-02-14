@@ -304,6 +304,9 @@ function reply()
     // $textMessageBuilder = new TextMessageBuilder("test！");
     $message = $event->getText();
 
+    $source = $event->getSource();
+    $userId = $source->getUserId();
+
     // 返信メッセージ作成
     switch ($message)
     {
@@ -313,8 +316,8 @@ function reply()
         break;
 
       default:
-        $replyMessage = '下のメニューボタンから操作してください。';
-        $replyMessage += $event['source']['userId'];
+        $replyMessage = '2下のメニューボタンから操作してください。';
+        $replyMessage += $userId;
         break;
     }
 
