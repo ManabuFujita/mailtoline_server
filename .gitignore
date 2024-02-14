@@ -31,3 +31,4 @@ logSend.txt
 config/common.php
 .htaccess
 .htpasswd
+config/common_production.php
