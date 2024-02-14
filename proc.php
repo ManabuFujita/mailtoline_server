@@ -314,6 +314,7 @@ function reply()
 
       default:
         $replyMessage = '下のメニューボタンから操作してください。';
+        $replyMessage += $event['source']['userId'];
         break;
     }
 
