@@ -22,6 +22,7 @@ date_default_timezone_set('Asia/Tokyo');
 //LINEから送られてきたらtrueになる（Webhook用）
 if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 {
+  http_response_code(200);
   reply();
   return;
 }
