@@ -309,7 +309,7 @@ function reply()
     {
     
       case '転送フィルター設定確認':
-        $replyMessage = $event;
+        $replyMessage = $event['source']['userId'];
         break;
 
       default:
