@@ -277,7 +277,22 @@ function reply()
     $sendMessage = new MultiMessageBuilder();
     // $textMessageBuilder = new TextMessageBuilder("test！");
     $message = $event->getText();
-    $textMessageBuilder = new TextMessageBuilder($message);
+
+    // 返信メッセージ作成
+    switch ($message)
+    {
+    
+      case '転送フィルター設定確認':
+        $replyMessage = $events;
+        break;
+
+      default:
+        $replyMessage = '下のメニューボタンから操作してください。';
+        break;
+    }
+
+    // 送信処理
+    $textMessageBuilder = new TextMessageBuilder($replyMessage);
     $sendMessage->add($textMessageBuilder);
     $bot->replyMessage($event->getReplyToken(), $sendMessage);
   }
