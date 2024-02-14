@@ -317,7 +317,7 @@ function reply()
 
       default:
         $replyMessage = '2下のメニューボタンから操作してください。';
-        $replyMessage += $userId;
+        $replyMessage .= $userId;
         break;
     }
 
