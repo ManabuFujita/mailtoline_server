@@ -22,7 +22,7 @@ jobs:
             - SHA256:TIw7EeZ5LXmxarr7yYrl6Y5DwqexIokXVl4LqiektpI
       - run:
           name: run deploy shell
-          command: ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USER@$SSH_HOST "cd ~/web/xprkd134.site/mailtoline_server/; ls ; ./deploy.sh; "
+          command: ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USER@$SSH_HOST "cd ~/web/xprkd134.site/mailtoline_server/; ./deploy.sh; "
 
 workflows:
   build-and-test:
