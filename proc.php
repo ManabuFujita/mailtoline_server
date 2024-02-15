@@ -220,12 +220,12 @@ foreach ($filters as $f)
     // Line通知
     if ($messages != '')
     {
-      echo '<br>';
-      echo 'Line通知';
-      echo '<br>';
+      // echo '<br>';
+      // echo 'Line通知';
+      // echo '<br>';
 
       $messages 
-        = '【メール通知】' . "\n" 
+        = '💡メール通知' . "\n" 
         . "\n" 
         . $messages;
 
@@ -444,9 +444,9 @@ function updateToken($db, $lineId, $email, $token)
 
   $client->setAccessToken($token);
 
-  echo "<br>";
-  echo "---------<br>";
-  echo $email;
+  // echo "<br>";
+  // echo "---------<br>";
+  // echo $email;
 
   
   // echo '<br>';
@@ -488,14 +488,14 @@ function updateToken($db, $lineId, $email, $token)
 
 
         $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
-        echo '<br>';
-        echo 'tokenを更新しました。';
-        echo '<br>';
+        // echo '<br>';
+        // echo 'tokenを更新しました。';
+        // echo '<br>';
     // }
   } else {
-    echo '<br>';
-    echo 'tokenの更新不要。';
-    echo '<br>';
+    // echo '<br>';
+    // echo 'tokenの更新不要。';
+    // echo '<br>';
   }
 }
 
@@ -561,13 +561,13 @@ function getGmailClient($token)
         // }
         // file_put_contents($tokenPath, json_encode($client->getAccessToken()));
 
-        echo '<br>';
-        echo 'tokenを更新しました。(getGmailClient)';
-        echo '<br>';
+        // echo '<br>';
+        // echo 'tokenを更新しました。(getGmailClient)';
+        // echo '<br>';
     } else {
-      echo '<br>';
-      echo 'tokenの更新不要。(getGmailClient)';
-      echo '<br>';
+      // echo '<br>';
+      // echo 'tokenの更新不要。(getGmailClient)';
+      // echo '<br>';
     }
     return $client;
 }
