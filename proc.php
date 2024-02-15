@@ -16,6 +16,7 @@ use \LINE\LINEBot;
 use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
 use LINE\LINEBot\MessageBuilder\MultiMessageBuilder;
 use \LINE\LINEBot\Constant\HTTPHeader;
+use LINE\LINEBot\MessageBuilder\Emoji;
 
 date_default_timezone_set('Asia/Tokyo');
 
@@ -325,6 +326,7 @@ function reply()
         // $replyMessage = $lineId;
         $replyMessage = '';
 
+        // メールアドレスとフィルターが設定してあれば、設定を返す
         $db = new Mail_gmail;
         $emailList = $db->getMyGmail($lineId);
         foreach ($emailList as $l)
@@ -340,7 +342,7 @@ function reply()
 
             if ($replyMessage == '')
             {
-              $replyMessage .= "【設定フィルター】\n";
+              $replyMessage .= "➡設定フィルター📨\n";
             } else {
               $replyMessage .= "\n";
             }
@@ -352,15 +354,16 @@ function reply()
           }
         }
 
+        // 未設定のメッセージ
         if ($replyMessage == '')
         {
-          $replyMessage = 'メールアドレスが登録されていません。' . "\n" . 'webサイト（下のメニューボタン）から登録してください。';
+          $replyMessage = '⚠設定が登録されていません💡' . "\n" . 'webサイト（下のメニューボタン）から登録してください🏠';
         }
 
         break;
 
       default:
-        $replyMessage = '下のメニューボタンから操作してください。';
+        $replyMessage = '⬇下のメニューボタンから操作してください🏠';
         break;
     }
 
