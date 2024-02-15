@@ -357,7 +357,7 @@ function reply()
         // 未設定のメッセージ
         if ($replyMessage == '')
         {
-          $replyMessage = '⚠設定が登録されていません💡' . "\n" . 'webサイト（下のメニューボタン）から登録してください🏠';
+          $replyMessage = '💡設定が登録されていません' . "\n" . 'webサイト（下のメニューボタン）から登録してください🏠';
         }
 
         break;
