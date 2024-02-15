@@ -75,9 +75,9 @@ updateTokens($db, $emailList);
 
 
 
-echo '<br>';
-echo 'tokenの更新処理後-------------------------------';
-echo '<br>';
+// echo '<br>';
+// echo 'tokenの更新処理後-------------------------------';
+// echo '<br>';
 
 
 // 日付取得
@@ -87,17 +87,17 @@ $dateFormatCronLog = 'Y/m/d H:i:s';
 $dateStart = new DateTimeImmutable();
 $dateEnd = new DateTimeImmutable();
 
-echo "<br>";
-echo "today:     " . $dateStart->format('Y-m-d H:i:s');
-echo "<br>";
+// echo "<br>";
+// echo "today:     " . $dateStart->format('Y-m-d H:i:s');
+// echo "<br>";
 
 $dateStart = $dateStart->add(DateInterval::createFromDateString('-1 day'));
 $dateEnd = $dateEnd->add(DateInterval::createFromDateString('+1 day'));
 
-echo "dateStart: " . $dateStart->format('Y-m-d H:i:s');
-echo "<br>";
-echo "dateEnd:   " . $dateEnd->format('Y-m-d H:i:s');
-echo "<br>";
+// echo "dateStart: " . $dateStart->format('Y-m-d H:i:s');
+// echo "<br>";
+// echo "dateEnd:   " . $dateEnd->format('Y-m-d H:i:s');
+// echo "<br>";
 
 // $todayYMD = date($dateFormatSendLog);
 // $dateStart = date($dateFormatSendLog, strtotime('-1 day'));
@@ -112,10 +112,10 @@ foreach ($filters as $f)
   $lineId = $f['line_id'];
   $token = getToken($f);
 
-  echo "<br>";
-  echo "*******************************************<br>";
-  echo "mail:" . $gmailAddress;
-  echo "<br>";
+  // echo "<br>";
+  // echo "*******************************************<br>";
+  // echo "mail:" . $gmailAddress;
+  // echo "<br>";
 
   // echo '<pre>';  
   // print_r($token);
@@ -164,11 +164,11 @@ foreach ($filters as $f)
 
 
   // 対象メールがなければ終了
-  echo '<br>';
-  echo '昨日〜今日の通知対象メール数：'.$resultsCount.'件<br>';
+  // echo '<br>';
+  // echo '昨日〜今日の通知対象メール数：'.$resultsCount.'件<br>';
   if ($resultsCount == 0)
   {
-    echo "今日は通知対象のメールがありません。";
+    // echo "今日は通知対象のメールがありません。";
   } else {
 
     $filter_list = [];
@@ -176,16 +176,16 @@ foreach ($filters as $f)
     foreach ($filter_results->getMessages() as $r)
     {
       $mailId = $r->getId();
-      echo "<br>";
-      echo "mailId:" . $mailId;
+      // echo "<br>";
+      // echo "mailId:" . $mailId;
 
       // 送信済みチェック
       // 同一IDは再送しない
       if ($db->isSended($lineId, $gmailAddress, $mailId))
       {
-        echo '<br>';
-        echo '通知済み';
-        echo '<br>';
+        // echo '<br>';
+        // echo '通知済み';
+        // echo '<br>';
       } else {
 
         // ToDo:メール内容取得
