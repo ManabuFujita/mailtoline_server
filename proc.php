@@ -19,6 +19,10 @@ use \LINE\LINEBot\Constant\HTTPHeader;
 
 date_default_timezone_set('Asia/Tokyo');
 
+// -----------------------------
+// webhook処理
+// -----------------------------
+
 //LINEから送られてきたらtrueになる（Webhook用）
 if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 {
@@ -36,6 +40,11 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 
   return;
 }
+
+
+// -----------------------------
+// バッチ処理
+// -----------------------------
 
 // メールアドレスリスト取得
 $db = new Mail_gmail;
@@ -298,29 +307,60 @@ function reply()
   $events = $bot->parseEventRequest($inputData, $signature);
 
   //大量にメッセージが送られると複数分のデータが同時に送られてくるため、foreachをしている。
+  // （同一人とは限らないため注意）
   foreach($events as $event)
   {
     $sendMessage = new MultiMessageBuilder();
     // $textMessageBuilder = new TextMessageBuilder("test！");
     $message = $event->getText();
+    $type = $event->getType();
+    $lineId = $event->getUserId();
 
-    $source = $event->getSource();
-    $userId = $source->getUserId();
+    // $array = json_decode($event, true);
 
     // 返信メッセージ作成
     switch ($message)
     {
-    
-      case '転送フィルター設定確認':
-        // $replyMessage = $event['source']['userId'];
-        break;
+      case '設定確認':
+        // $replyMessage = $lineId;
+        $replyMessage = '';
 
-      case 'あ':
-        $replyMessage = $userId;
+        $db = new Mail_gmail;
+        $emailList = $db->getMyGmail($lineId);
+        foreach ($emailList as $l)
+        {
+          $lineId = $l['line_id'];
+          $email = $l['email'];
+
+          $filters = $db->getMyFilter($lineId, $email);
+          foreach ($filters as $f)
+          {
+            $mailFrom = $f['mail_from'];
+            $subject = $f['subject'];
+
+            if ($replyMessage == '')
+            {
+              $replyMessage .= "【設定フィルター】\n";
+            } else {
+              $replyMessage .= "\n";
+            }
+
+            $replyMessage .= "To: " . $email 
+              . "\n" . "From: " . $mailFrom 
+              . "\n" . "Subject: " . $subject
+              . "\n";
+          }
+        }
+
+        if ($replyMessage == '')
+        {
+          $replyMessage = 'メールアドレスが登録されていません。' . "\n" . 'webサイト（下のメニューボタン）から登録してください。';
+        }
+
         break;
 
       default:
-        $replyMessage = '2下のメニューボタンから操作してください。';
+        $replyMessage = '下のメニューボタンから操作してください。';
         break;
     }
 

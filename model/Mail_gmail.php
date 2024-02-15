@@ -109,6 +109,27 @@ class Mail_gmail
     
   }
 
+  public function getMyGmail($lineId)
+  {
+    try {
+      $sql = "SELECT * FROM " . $this->table_gmail . " WHERE line_id = '" . $lineId . "'";
+
+      $stmh = $this->pdo->query($sql);
+
+      $list = $stmh->fetchAll(PDO::FETCH_ASSOC);
+      
+      return $list;
+
+      // return $stmh;
+      
+    } catch (PDOException $Exception) {
+
+      print "エラー:".$Exception->getMessage();
+      return null;
+    }
+    
+  }
+
   public function getAllFilterWithToken()
   {
     try {
@@ -136,6 +157,36 @@ class Mail_gmail
       // print_r($sql);
       // echo '</pre>';
       // echo '<br>';
+
+      $stmh = $this->pdo->query($sql);
+
+      $list = $stmh->fetchAll(PDO::FETCH_ASSOC);
+
+      return $list;
+
+      // return $stmh;
+      
+    } catch (PDOException $Exception) {
+
+      print "エラー:".$Exception->getMessage();
+      return null;
+    }
+    
+  }
+
+  public function getMyFilter($lineId, $email)
+  {
+    try {
+      // $sql = "SELECT * FROM " . $this->table_gmail;
+
+      // emailアドレスで結合する
+      $sql = "SELECT"
+        . " "  . $this->table_filter . ".line_id"
+        . " ," . $this->table_filter . ".email"
+        . " ," . $this->table_filter . ".mail_from"
+        . " ," . $this->table_filter . ".subject"
+        . " FROM " . $this->table_filter
+        . " WHERE line_id = '" . $lineId . "' AND email = '" . $email . "'";
 
       $stmh = $this->pdo->query($sql);
 
