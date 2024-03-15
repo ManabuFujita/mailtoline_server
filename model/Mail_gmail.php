@@ -212,7 +212,7 @@ class Mail_gmail
       // categoryにrow追加
       $sql = "INSERT INTO sendlogs"
         . " (line_id, email, mail_id, senddate, title, mail_from)"
-        . " VALUES (:line_id, :email, '".$senddate."', :mail_id, :title, :mail_from)";
+        . " VALUES (:line_id, :email, '".$senddate->format('Y-m-d H:i:s')."', :mail_id, :title, :mail_from)";
 
       $stmh = $this->pdo->prepare($sql);
 
