@@ -219,7 +219,7 @@ class Mail_gmail
       $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
       $stmh->bindValue(':email', $email, PDO::PARAM_STR);
       $stmh->bindValue(':mail_id', $mailId, PDO::PARAM_STR);
-      // $stmh->bindValue(':senddate', $senddate, PDO::PARAM_STR);
+      $stmh->bindValue(':senddate', $senddate->format('Y-m-d H:i:s'), PDO::PARAM_STR);
       $stmh->bindValue(':title', $title, PDO::PARAM_STR);
       $stmh->bindValue(':mail_from', $from, PDO::PARAM_STR);
 
