@@ -211,15 +211,15 @@ class Mail_gmail
 
       // categoryにrow追加
       $sql = "INSERT INTO sendlogs"
-        . " (line_id, email, mail_id, title, mail_from)"
-        . " VALUES (:line_id, :email, :mail_id, :title, :mail_from)";
+        . " (line_id, email, mail_id, senddate, title, mail_from)"
+        . " VALUES (:line_id, :email, '".$senddate."', :mail_id, :title, :mail_from)";
 
       $stmh = $this->pdo->prepare($sql);
 
       $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
       $stmh->bindValue(':email', $email, PDO::PARAM_STR);
       $stmh->bindValue(':mail_id', $mailId, PDO::PARAM_STR);
-      $stmh->bindValue(':senddate', $senddate->format('Y-m-d H:i:s'), PDO::PARAM_STR);
+      // $stmh->bindValue(':senddate', $senddate, PDO::PARAM_STR); // datetime型はできない
       $stmh->bindValue(':title', $title, PDO::PARAM_STR);
       $stmh->bindValue(':mail_from', $from, PDO::PARAM_STR);
 
