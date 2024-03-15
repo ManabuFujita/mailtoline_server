@@ -204,7 +204,7 @@ class Mail_gmail
     
   }
 
-  public function insertSendlog($lineId, $email, $mailId, $title, $from)
+  public function insertSendlog($lineId, $email, $mailId, $title, $from, $senddate)
   {
     try {
       $this->pdo->beginTransaction(); // トランザクション開始
@@ -219,7 +219,7 @@ class Mail_gmail
       $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
       $stmh->bindValue(':email', $email, PDO::PARAM_STR);
       $stmh->bindValue(':mail_id', $mailId, PDO::PARAM_STR);
-      // $stmh->bindValue(':senddate', $senddate, PDO::PARAM_STR);
+      $stmh->bindValue(':senddate', $senddate, PDO::PARAM_STR);
       $stmh->bindValue(':title', $title, PDO::PARAM_STR);
       $stmh->bindValue(':mail_from', $from, PDO::PARAM_STR);
 

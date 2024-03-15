@@ -84,6 +84,7 @@ updateTokens($db, $emailList);
 $dateFormatSendLog = 'Y/m/d';
 $dateFormatCronLog = 'Y/m/d H:i:s';
 
+$now = new DateTimeImmutable();
 $dateStart = new DateTimeImmutable();
 $dateEnd = new DateTimeImmutable();
 
@@ -212,7 +213,7 @@ foreach ($filters as $f)
         // echo '<br>';
         // echo 'DB登録';
         // echo '<br>';
-        $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from']);
+        $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from'], $now);
       }
 
     }
