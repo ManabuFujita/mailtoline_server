@@ -6,6 +6,9 @@ Config::setConfigDirectory(__DIR__ . '/config');
 $line_channel_access_token = Config::get('line_channel_access_token');
 $line_channel_secret = Config::get('line_channel_secret');
 
+define('ADMIN_EMAIL', Config::get('batch_admin_email'));
+define('LOG_FILE', Config::get('batch_log_file'));
+
 //LINESDKの読み込み
 require_once('vendor/autoload.php');
 require_once('lib/FuncFile.php');
@@ -46,6 +49,7 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 // -----------------------------
 // バッチ処理
 // -----------------------------
+error_log('[バッチ開始] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
 
 // メールアドレスリスト取得
 $db = new Mail_gmail;
@@ -84,7 +88,6 @@ updateTokens($db, $emailList);
 $dateFormatSendLog = 'Y/m/d';
 $dateFormatCronLog = 'Y/m/d H:i:s';
 
-$now = new DateTimeImmutable();
 $dateStart = new DateTimeImmutable();
 $dateEnd = new DateTimeImmutable();
 
@@ -105,9 +108,28 @@ $dateEnd = $dateEnd->add(DateInterval::createFromDateString('+1 day'));
 // $dateEnd = date($dateFormatSendLog, strtotime('+1 day'));
 
 
-// メールフィルター転送処理
+// MAIN:メールフィルター転送処理
 $filters = $db->getAllFilterWithToken();
 foreach ($filters as $f)
+{
+  try {
+    processFilter($f, $db, $dateStart, $dateEnd);
+  } catch (Exception $e) {
+    error_log('[バッチエラー] ' . $f['email'] . ' : ' . $e->getMessage() . "\n", 3, LOG_FILE);
+    notifyAdmin($f['email'], $e->getMessage());
+    continue;
+  }
+}
+
+error_log('[バッチ終了] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
+
+return;
+
+// -----------------------------------------------------------------------------
+// 関数
+// -----------------------------------------------------------------------------
+
+function processFilter($f, $db, $dateStart, $dateEnd)
 {
   $gmailAddress = $f['email'];
   $lineId = $f['line_id'];
@@ -139,20 +161,9 @@ foreach ($filters as $f)
   $optParams = [];
 
 
+  $filter = buildFilter($f, $dateStart, $dateEnd);
 
 
-  // 昨日の対象メール数を取得
-  // $filter = 'to:'.$email; // 自分のメールボックスでも、Toが自分とは限らないため、Toは設定しない
-  $filter = '';
-  if ($filter_mailfrom != null)
-  {
-    $filter .= ' from:' . $filter_mailfrom;
-  }
-  if ($filter_subject != null)
-  {
-    $filter .= ' subject:' . $filter_subject . '';
-  }
-  $filter .= ' after:' . $dateStart->format('Y/m/d') . ' before:' . $dateEnd->format('Y/m/d');
 
   $optParams['q'] = $filter;
   $filter_results = $service->users_messages->listUsersMessages($user, $optParams);
@@ -173,50 +184,8 @@ foreach ($filters as $f)
   } else {
 
     $filter_list = [];
-    $messages = '';
-    foreach ($filter_results->getMessages() as $r)
-    {
-      $mailId = $r->getId();
-      // echo "<br>";
-      // echo "mailId:" . $mailId;
 
-      // 送信済みチェック
-      // 同一IDは再送しない
-      if ($db->isSended($lineId, $gmailAddress, $mailId))
-      {
-        // echo '<br>';
-        // echo '通知済み';
-        // echo '<br>';
-      } else {
-
-        // ToDo:メール内容取得
-        $mail = $service->users_messages->get($user, $mailId);
-        $headers = $mail->payload->headers;
-
-        // データを処理しやすい形に抽出
-        $data = getData($headers);
-
-        if ($messages != '')
-        {
-          $messages .= "\n" . "\n" . '--------------------' . "\n" . "\n";
-        }
-        $messages
-          .= '■Date:' . "\n". $data['date']
-          . "\n" . '■From:' . "\n". $data['from']
-          . "\n" . '■Subject:' . "\n". $data['subject']
-          ;
-
-
-
-
-        // DB登録
-        // echo '<br>';
-        // echo 'DB登録';
-        // echo '<br>';
-        $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from'], $now);
-      }
-
-    }
+    $messages = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
 
     // Line通知
     if ($messages != '')
@@ -236,6 +205,71 @@ foreach ($filters as $f)
       push($lineId, $messages);
     }
   }
+}
+
+function buildFilter($f, $dateStart, $dateEnd)
+{
+    // 昨日の対象メール数を取得
+  // $filter = 'to:'.$email; // 自分のメールボックスでも、Toが自分とは限らないため、Toは設定しない
+  $filter = '';
+  if ($f['mail_from'] != null)
+  {
+    $filter .= ' from:' . $f['mail_from'];
+  }
+  if ($f['subject'] != null)
+  {
+    $filter .= ' subject:' . $f['subject'] . '';
+  }
+  $filter .= ' after:' . $dateStart->format('Y/m/d') . ' before:' . $dateEnd->format('Y/m/d');
+
+  return $filter;
+}
+
+function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress)
+{
+  $messages = '';
+  foreach ($filter_results->getMessages() as $r)
+  {
+    $mailId = $r->getId();
+    // echo "<br>";
+    // echo "mailId:" . $mailId;
+
+    // 送信済みチェック
+    // 同一IDは再送しない
+    if ($db->isSended($lineId, $gmailAddress, $mailId))
+    {
+      // echo '<br>';
+      // echo '通知済み';
+      // echo '<br>';
+    } else {
+
+      // ToDo:メール内容取得
+      $mail = $service->users_messages->get($user, $mailId);
+      $headers = $mail->payload->headers;
+
+      // データを処理しやすい形に抽出
+      $data = getData($headers);
+
+      if ($messages != '')
+      {
+        $messages .= "\n" . "\n" . '--------------------' . "\n" . "\n";
+      }
+      $messages
+        .= '■Date:' . "\n". $data['date']
+        . "\n" . '■From:' . "\n". $data['from']
+        . "\n" . '■Subject:' . "\n". $data['subject']
+        ;
+      
+      // DB登録
+      $now = new DateTimeImmutable();
+      // echo '<br>';
+      // echo 'DB登録';
+      // echo '<br>';
+      $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from'], $now);
+    }
+  }
+
+  return $messages;
 }
 
 function getData($headers)
@@ -265,9 +299,17 @@ function getData($headers)
     ];
 }
 
-return;
-
-// -----------------------------------------------------------------------------
+// 管理者に通知する処理
+function notifyAdmin($email, $errorMessage)
+{
+    $to = ADMIN_EMAIL; // 管理者メールアドレス
+    $subject = '[mailtoline:エラー] バッチ処理でエラーが発生しました';
+    $body = "対象メールアドレス: " . $email . "\n"
+          . "エラー内容: " . $errorMessage . "\n"
+          . "発生日時: " . date('Y-m-d H:i:s');
+    
+    mail($to, $subject, $body);
+}
 
 function writeSendLog($message)
 {
@@ -430,12 +472,19 @@ function updateTokens($db, $emailList)
 {
   foreach ($emailList as $l)
   {
-    $lineId = $l['line_id'];
-    $email = $l['email'];
-    $token = getToken($l);
+    try {
+      $lineId = $l['line_id'];
+      $email = $l['email'];
+      $token = getToken($l);
 
-    // トークンは更新しづづける
-    updateToken($db, $lineId, $email, $token);
+      // トークンは更新しづづける
+      updateToken($db, $lineId, $email, $token);
+
+    } catch (Exception $e) {
+      error_log('[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage() . "\n", 3, LOG_FILE);
+      notifyAdmin($l['email'], $e->getMessage());
+      continue;
+    }
   }
 }
 

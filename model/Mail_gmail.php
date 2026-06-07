@@ -78,7 +78,7 @@ class Mail_gmail
       
       $this->pdo->commit(); // トランザクション終了
 
-      print "更新しました。<br>";
+      print "Tokenを更新しました。<br>";
     } catch (PDOException $Exception) {
 
       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
