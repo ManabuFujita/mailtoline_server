@@ -30,7 +30,7 @@ logCron.txt
 logSend.txt
 .htaccess
 .htpasswd
-config/common_production.php
 logs/batch_error.log
-config/common_dev.php
 config/common_prod.php
+config/common_dev.php
+
