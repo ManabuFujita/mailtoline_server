@@ -19,7 +19,7 @@ jobs:
       #     command: ':'
       - add_ssh_keys:
           fingerprints:
-            - SHA256:TIw7EeZ5LXmxarr7yYrl6Y5DwqexIokXVl4LqiektpI
+            - SHA256:0pBqCFuTv37Af1EoCum8vCTG+OYyHP671yDNC3IlUU4
       - run:
           name: run deploy shell
           command: ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USER@$SSH_HOST "cd $PROJECT_DIR; ./deploy.sh; "
