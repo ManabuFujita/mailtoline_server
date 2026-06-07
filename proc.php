@@ -49,6 +49,7 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 // -----------------------------
 // バッチ処理
 // -----------------------------
+error_log('[バッチ開始] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
 
 // メールアドレスリスト取得
 $db = new Mail_gmail;
@@ -119,6 +120,14 @@ foreach ($filters as $f)
     continue;
   }
 }
+
+error_log('[バッチ終了] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
+
+return;
+
+// -----------------------------------------------------------------------------
+// 関数
+// -----------------------------------------------------------------------------
 
 function processFilter($f, $db, $dateStart, $dateEnd)
 {
@@ -289,10 +298,6 @@ function getData($headers)
     'to' => $to,
     ];
 }
-
-return;
-
-// -----------------------------------------------------------------------------
 
 // 管理者に通知する処理
 function notifyAdmin($email, $errorMessage)
