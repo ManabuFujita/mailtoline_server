@@ -28,7 +28,9 @@ lib/connectDB_____.php
 lib/ConnectDB.php
 logCron.txt
 logSend.txt
-config/common.php
 .htaccess
 .htpasswd
 config/common_production.php
+logs/batch_error.log
+config/common_dev.php
+config/common_prod.php
