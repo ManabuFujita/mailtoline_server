@@ -10,9 +10,14 @@ class Config {
     }
 
     public static function get($s) {
+
+        // 環境によってファイルを切り替える
+        $env = getenv('APP_ENV') ?: 'dev';
+        $file = 'common_' . $env . '.php';
+
         $values = preg_split('/\./', $s, -1, PREG_SPLIT_NO_EMPTY);
         $key = array_pop($values);
-        $file = 'common.php';
+
         $path = (!empty($values)) ? implode(DIRECTORY_SEPARATOR, $values) .
             DIRECTORY_SEPARATOR : '';
         $base_dir = self::getConfigDirectory() . DIRECTORY_SEPARATOR;
