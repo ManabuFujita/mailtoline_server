@@ -34,3 +34,4 @@ logs/batch_error.log
 config/common_prod.php
 config/common_dev.php
 logs/*
+deploy.sh
