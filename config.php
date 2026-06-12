@@ -24,6 +24,6 @@ class Config {
             DIRECTORY_SEPARATOR : '';
         $base_dir = self::getConfigDirectory() . DIRECTORY_SEPARATOR;
         $config = include($base_dir . $path . $file);
-        return $config[$key];
+        return $config[$key] ?? null;
     }
 }

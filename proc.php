@@ -49,6 +49,13 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 // -----------------------------
 // バッチ処理
 // -----------------------------
+
+// cronは10分間隔で実行されるが、config の batch_run_times（例: ['06:00', '12:00', '18:00']）に
+// 設定した時刻以外は処理をスキップする。未設定の場合は毎回実行する。
+if (!shouldRunBatch(Config::get('batch_run_times'))) {
+  return;
+}
+
 error_log('[バッチ開始] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
 
 // メールアドレスリスト取得
@@ -128,6 +135,19 @@ return;
 // -----------------------------------------------------------------------------
 // 関数
 // -----------------------------------------------------------------------------
+
+// バッチ処理を実行するかどうかを判定する
+// $runTimes: 実行する時刻（'H:i'形式）の配列。未設定の場合は常にtrue
+function shouldRunBatch($runTimes)
+{
+  if (empty($runTimes))
+  {
+    return true;
+  }
+
+  $now = date('H:i');
+  return in_array($now, $runTimes, true);
+}
 
 function processFilter($f, $db, $dateStart, $dateEnd)
 {
