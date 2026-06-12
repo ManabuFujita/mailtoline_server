@@ -50,8 +50,9 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 // バッチ処理
 // -----------------------------
 
-// cronは10分間隔で実行されるが、config の batch_run_times（例: ['06:00', '12:00', '18:00']）に
-// 設定した時刻以外は処理をスキップする。未設定の場合は毎回実行する。
+// cronは10分間隔だが正確な時刻に実行されるとは限らないため、
+// config の batch_run_times（例: ['12:00', '18:00']）に設定した時刻を
+// 過ぎてから最初の1回だけ処理を実行する。未設定の場合は毎回実行する。
 if (!shouldRunBatch(Config::get('batch_run_times'))) {
   return;
 }
@@ -145,8 +146,49 @@ function shouldRunBatch($runTimes)
     return true;
   }
 
-  $now = date('H:i');
-  return in_array($now, $runTimes, true);
+  sort($runTimes);
+
+  $now = new DateTimeImmutable();
+  $today = $now->format('Y-m-d');
+
+  // 本日の実行時刻のうち、現在時刻を過ぎている最後の時刻をスロットとする
+  $targetSlot = null;
+  foreach ($runTimes as $time)
+  {
+    $slot = DateTimeImmutable::createFromFormat('Y-m-d H:i', $today . ' ' . $time);
+    if ($now >= $slot)
+    {
+      $targetSlot = $slot;
+    }
+  }
+
+  // 本日まだどの実行時刻も過ぎていない場合は、前日の最後の実行時刻をスロットとする
+  if ($targetSlot === null)
+  {
+    $yesterday = $now->modify('-1 day')->format('Y-m-d');
+    $lastTime = end($runTimes);
+    $targetSlot = DateTimeImmutable::createFromFormat('Y-m-d H:i', $yesterday . ' ' . $lastTime);
+  }
+
+  $targetSlotKey = $targetSlot->format('Y-m-d H:i');
+
+  // 直近に実行したスロットを記録し、同じスロットでは再実行しないようにする
+  $stateDir = __DIR__ . '/logs';
+  if (!is_dir($stateDir))
+  {
+    mkdir($stateDir, 0755, true);
+  }
+  $stateFile = $stateDir . '/batch_last_run.txt';
+
+  $lastRunSlotKey = file_exists($stateFile) ? trim(file_get_contents($stateFile)) : '';
+
+  if ($lastRunSlotKey === $targetSlotKey)
+  {
+    return false;
+  }
+
+  file_put_contents($stateFile, $targetSlotKey);
+  return true;
 }
 
 function processFilter($f, $db, $dateStart, $dateEnd)
