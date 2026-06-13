@@ -15,7 +15,7 @@ define('BATCH_STATE_FILE', Config::get('batch_state_file'));
 define('BATCH_RUN_TIMES', Config::get('batch_run_times'));
 
 require_once('vendor/autoload.php');
-require_once('lib/func_file.php');
+require_once('model/FileStore.php');
 require_once('model/Mail_gmail.php');
 require_once('lib/batch_log.php');
 require_once('lib/gmail_token.php');

@@ -8,7 +8,7 @@ function shouldRunBatch()
   $now = new DateTimeImmutable();
   $today = $now->format('Y-m-d');
 
-  $stateFile = new FuncFile(BATCH_STATE_FILE);
+  $stateFile = new FileStore(BATCH_STATE_FILE);
   $lastSlot = trim((string)$stateFile->getFile());
 
   // 既に過ぎている時刻の中で、一番遅い時刻を対象とする
