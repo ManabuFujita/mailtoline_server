@@ -11,6 +11,9 @@ function shouldRunBatch()
   $stateFile = new FuncFile(BATCH_STATE_FILE);
   $lastSlot = trim((string)$stateFile->getFile());
 
+  // 既に過ぎている時刻の中で、一番遅い時刻を対象とする
+  $targetSlot = null;
+
   foreach (BATCH_RUN_TIMES as $time)
   {
     $scheduled = DateTimeImmutable::createFromFormat('Y-m-d H:i', $today . ' ' . $time);
@@ -22,18 +25,17 @@ function shouldRunBatch()
     }
 
     // 同じ時刻の実行済みチェック用キー（日付＋時刻）
-    $slot = $today . '-' . $time;
-
-    if ($lastSlot === $slot)
-    {
-      continue;
-    }
-
-    $stateFile->writeFileOverWrite($slot);
-    return true;
+    $targetSlot = $today . '-' . $time;
   }
 
-  return false;
+  // 対象時刻がない、またはすでに実行済みの場合は実行しない
+  if ($targetSlot === null || $lastSlot === $targetSlot)
+  {
+    return false;
+  }
+
+  $stateFile->writeFileOverWrite($targetSlot);
+  return true;
 }
 
 // -----------------------------
@@ -42,6 +44,7 @@ function shouldRunBatch()
 function runBatch()
 {
   writeLog(LOG_RUN, 'cron実行');
+  debugEcho('cron実行', true);
 
   if (!shouldRunBatch())
   {
@@ -49,6 +52,7 @@ function runBatch()
   }
 
   writeLog(LOG_RUN, 'バッチ処理開始');
+  debugEcho('バッチ処理開始');
 
   // メールアドレスリスト取得
   $db = new Mail_gmail;
@@ -121,4 +125,5 @@ function runBatch()
   }
 
   writeLog(LOG_RUN, 'バッチ処理終了');
+  debugEcho('バッチ処理終了');
 }

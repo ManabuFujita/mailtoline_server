@@ -81,14 +81,11 @@ function updateToken($db, $lineId, $email, $token)
 
 
         $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
-        // echo '<br>';
-        // echo 'tokenを更新しました。';
-        // echo '<br>';
+
+        debugEcho('Gmailトークンを更新しました。: ' . $email);
     // }
   } else {
-    // echo '<br>';
-    // echo 'tokenの更新不要。';
-    // echo '<br>';
+    debugEcho('Gmailトークンの更新不要。: ' . $email);
   }
 }
 
