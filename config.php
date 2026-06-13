@@ -15,7 +15,7 @@ class Config {
         // 本番環境はAPP_ENVをrunCron.shに設定している（prod）
         // 開発環境は環境変数を設定してないため、devになる
         $env = getenv('APP_ENV') ?: 'dev';
-        $file = 'common_' . $env . '.php';
+        $file = $env . '.php';
 
         $values = preg_split('/\./', $s, -1, PREG_SPLIT_NO_EMPTY);
         $key = array_pop($values);
@@ -23,7 +23,9 @@ class Config {
         $path = (!empty($values)) ? implode(DIRECTORY_SEPARATOR, $values) .
             DIRECTORY_SEPARATOR : '';
         $base_dir = self::getConfigDirectory() . DIRECTORY_SEPARATOR;
+        $common = include($base_dir . $path . 'common.php');
         $config = include($base_dir . $path . $file);
+        $config = array_merge($common, $config);
         return $config[$key];
     }
 }

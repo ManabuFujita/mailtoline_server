@@ -31,7 +31,7 @@ logSend.txt
 .htaccess
 .htpasswd
 logs/batch_error.log
-config/common_prod.php
-config/common_dev.php
+config/prod.php
+config/dev.php
 logs/*
 deploy.sh

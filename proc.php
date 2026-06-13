@@ -6,8 +6,9 @@ Config::setConfigDirectory(__DIR__ . '/config');
 $line_channel_access_token = Config::get('line_channel_access_token');
 $line_channel_secret = Config::get('line_channel_secret');
 
-define('ADMIN_EMAIL', Config::get('batch_admin_email'));
-define('LOG_FILE', Config::get('batch_log_file'));
+define('ADMIN_EMAIL', Config::get('mail_admin'));
+define('LOG_RUN', Config::get('batch_log_run'));
+define('LOG_ERROR', Config::get('batch_log_error'));
 
 //LINESDKの読み込み
 require_once('vendor/autoload.php');
@@ -49,7 +50,7 @@ if(isset($_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE]))
 // -----------------------------
 // バッチ処理
 // -----------------------------
-error_log('[バッチ開始] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
+writeLog(LOG_RUN, 'バッチ開始');
 
 // メールアドレスリスト取得
 $db = new Mail_gmail;
@@ -115,13 +116,13 @@ foreach ($filters as $f)
   try {
     processFilter($f, $db, $dateStart, $dateEnd);
   } catch (Exception $e) {
-    error_log('[バッチエラー] ' . $f['email'] . ' : ' . $e->getMessage() . "\n", 3, LOG_FILE);
+    writeLog(LOG_ERROR, '[バッチエラー] ' . $f['email'] . ' : ' . $e->getMessage());
     notifyAdmin($f['email'], $e->getMessage());
     continue;
   }
 }
 
-error_log('[バッチ終了] ' . date('Y-m-d H:i:s') . "\n", 3, LOG_FILE);
+writeLog(LOG_RUN, 'バッチ終了');
 
 return;
 
@@ -297,6 +298,12 @@ function getData($headers)
     'from' => $from,
     'to' => $to,
     ];
+}
+
+// ログ書き出し処理
+function writeLog($file, $message)
+{
+  error_log('[' . date('Y-m-d H:i:s') . '] ' . $message . "\n", 3, $file);
 }
 
 // 管理者に通知する処理
@@ -481,8 +488,7 @@ function updateTokens($db, $emailList)
       updateToken($db, $lineId, $email, $token);
 
     } catch (Exception $e) {
-      error_log('[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage() . "\n", 3, LOG_FILE);
-      notifyAdmin($l['email'], $e->getMessage());
+      writeLog(LOG_ERROR, '[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage());
       continue;
     }
   }
