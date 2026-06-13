@@ -24,8 +24,8 @@ Homestead.json
 token.json
 runCron.sh
 credentials.json
-lib/connectDB_____.php
-lib/ConnectDB.php
+model/connectDB_____.php
+model/ConnectDB.php
 logCron.txt
 logSend.txt
 .htaccess
