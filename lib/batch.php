@@ -1,11 +1,54 @@
 <?php
 
+// 対象時刻を過ぎていて、まだ実行していない場合のみtrueを返す
+// ※BATCH_RUN_TIMESに23:59など日付が変わる直前の時刻を指定すると、
+//   日付をまたぐタイミングで実行されない場合があるため避けること
+function shouldRunBatch()
+{
+  $now = new DateTimeImmutable();
+  $today = $now->format('Y-m-d');
+
+  $stateFile = new FuncFile(BATCH_STATE_FILE);
+  $lastSlot = trim((string)$stateFile->getFile());
+
+  foreach (BATCH_RUN_TIMES as $time)
+  {
+    $scheduled = DateTimeImmutable::createFromFormat('Y-m-d H:i', $today . ' ' . $time);
+
+    // まだ対象時刻を過ぎていない場合はスキップ
+    if ($now < $scheduled)
+    {
+      continue;
+    }
+
+    // 同じ時刻の実行済みチェック用キー（日付＋時刻）
+    $slot = $today . '-' . $time;
+
+    if ($lastSlot === $slot)
+    {
+      continue;
+    }
+
+    $stateFile->writeFileOverWrite($slot);
+    return true;
+  }
+
+  return false;
+}
+
 // -----------------------------
 // バッチ処理
 // -----------------------------
 function runBatch()
 {
-  writeLog(LOG_RUN, 'バッチ開始');
+  writeLog(LOG_RUN, 'cron実行');
+
+  if (!shouldRunBatch())
+  {
+    return;
+  }
+
+  writeLog(LOG_RUN, 'バッチ処理開始');
 
   // メールアドレスリスト取得
   $db = new Mail_gmail;
@@ -77,5 +120,5 @@ function runBatch()
     }
   }
 
-  writeLog(LOG_RUN, 'バッチ終了');
+  writeLog(LOG_RUN, 'バッチ処理終了');
 }
