@@ -6,7 +6,7 @@ Config::setConfigDirectory(__DIR__ . '/config');
 $line_channel_access_token = Config::get('line_channel_access_token');
 $line_channel_secret = Config::get('line_channel_secret');
 
-define('ADMIN_EMAIL', Config::get('batch_admin_email'));
+define('ADMIN_EMAIL', Config::get('mail_admin'));
 define('LOG_RUN', Config::get('batch_log_run'));
 define('LOG_ERROR', Config::get('batch_log_error'));
 
