@@ -37,53 +37,23 @@ function updateToken(GmailRepository $db, string $lineId, string $email, array $
 
   $client->setAccessToken($token);
 
-  // echo "<br>";
-  // echo "---------<br>";
-  // echo $email;
-
-
-  // echo '<br>';
-  // echo '更新前';
-  // echo '<pre>';
-  // print_r($token);
-  // echo '</pre>';
-  // echo '<br>';
-
-  // If there is no previous token or it's expired.
+  // トークンが期限切れの場合は更新する
   if ($client->isAccessTokenExpired())
   {
-    // Refresh the token if possible, else fetch a new one.
-    // if ($refreshToken != null)
-    // {
+    $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
 
+    $token = $client->getAccessToken();
+    $accessToken = $token['access_token'];
+    $refreshToken = $token['refresh_token'];
+    $idToken = $token['id_token'];
+    $expiresIn = $token['expires_in'];
+    // $created = date('Y-m-d H:i:s', $token['created']);
+    $created = timestamp2datetime($token['created']);
 
+    // DB更新
+    $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
 
-        $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
-
-        $token = $client->getAccessToken();
-
-        // echo '<br>';
-        // echo '更新後';
-        // echo '<pre>';
-        // print_r($token);
-        // echo '</pre>';
-        // echo '<br>';
-
-
-
-        $accessToken = $token['access_token'];
-        $refreshToken = $token['refresh_token'];
-        $idToken = $token['id_token'];
-        $expiresIn = $token['expires_in'];
-        // $created = date('Y-m-d H:i:s', $token['created']);
-        $created = timestamp2datetime($token['created']);
-
-
-
-        $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
-
-        debugEcho('Gmailトークンを更新しました。: ' . $email);
-    // }
+    debugEcho('Gmailトークンを更新しました。: ' . $email);
   } else {
     debugEcho('Gmailトークンの更新不要。: ' . $email);
   }
@@ -91,9 +61,6 @@ function updateToken(GmailRepository $db, string $lineId, string $email, array $
 
 function getToken(array $l): array
 {
-  // $lineId = $l['line_id'];
-  // $email = $l['email'];
-
   $accessToken = $l['access_token'];
   $refreshToken = $l['refresh_token'];
   $idToken = $l['id_token'];

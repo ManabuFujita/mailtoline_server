@@ -8,8 +8,8 @@ function shouldRunBatch()
   $now = new DateTimeImmutable();
   $today = $now->format('Y-m-d');
 
-  $stateFile = new FileStore(BATCH_LAST_RUN_FILE);
-  $lastSlot = trim((string)$stateFile->getFile());
+  $lastRunFile = new FileStore(BATCH_LAST_RUN_FILE);
+  $lastSlot = trim((string)$lastRunFile->getFile());
 
   // 既に過ぎている時刻の中で、一番遅い時刻を対象とする
   $targetSlot = null;
@@ -34,7 +34,7 @@ function shouldRunBatch()
     return false;
   }
 
-  $stateFile->writeFileOverWrite($targetSlot);
+  $lastRunFile->writeFileOverWrite($targetSlot);
   return true;
 }
 
@@ -43,9 +43,11 @@ function shouldRunBatch()
 // -----------------------------
 function runBatch()
 {
+  // ログ出力
   writeLog(LOG_RUN, 'cron実行');
   debugEcho('cron実行', true);
 
+  // 定時時刻を過ぎていて、まだ実行していない場合のみ処理を実行する
   if (!shouldRunBatch())
   {
     return;
@@ -57,61 +59,17 @@ function runBatch()
   // メールアドレスリスト取得
   $db = new GmailRepository;
   $emailList = $db->getAllGmail();
-  // echo '<pre>';
-  // print_r($list);
-  // echo '</pre>';
-
 
   // 登録メールアドレスのトークン更新処理
   // 全メールアドレスについて、期限が切れてたら更新する
   updateTokens($db, $emailList);
-  // foreach ($list as $l)
-  // {
-  //   $lineId = $l['line_id'];
-  //   $email = $l['email'];
-  //   $token = getToken($l);
 
-  //   // echo '<pre>';
-  //   // print_r($token);
-  //   // echo '</pre>';
+  // 日付取得（前日〜翌日を対象とする）
+  $now = new DateTimeImmutable();
+  $dateStart = $now->modify('-1 day');
+  $dateEnd = $now->modify('+1 day');
 
-  //   // トークンは更新しづづける
-  //   updateToken($db, $lineId, $email, $token);
-  // }
-
-
-
-
-  // echo '<br>';
-  // echo 'tokenの更新処理後-------------------------------';
-  // echo '<br>';
-
-
-  // 日付取得
-  $dateFormatSendLog = 'Y/m/d';
-  $dateFormatCronLog = 'Y/m/d H:i:s';
-
-  $dateStart = new DateTimeImmutable();
-  $dateEnd = new DateTimeImmutable();
-
-  // echo "<br>";
-  // echo "today:     " . $dateStart->format('Y-m-d H:i:s');
-  // echo "<br>";
-
-  $dateStart = $dateStart->add(DateInterval::createFromDateString('-1 day'));
-  $dateEnd = $dateEnd->add(DateInterval::createFromDateString('+1 day'));
-
-  // echo "dateStart: " . $dateStart->format('Y-m-d H:i:s');
-  // echo "<br>";
-  // echo "dateEnd:   " . $dateEnd->format('Y-m-d H:i:s');
-  // echo "<br>";
-
-  // $todayYMD = date($dateFormatSendLog);
-  // $dateStart = date($dateFormatSendLog, strtotime('-1 day'));
-  // $dateEnd = date($dateFormatSendLog, strtotime('+1 day'));
-
-
-  // MAIN:メールフィルター転送処理
+  // メイン処理
   $filters = $db->getAllFilterWithToken();
   foreach ($filters as $f)
   {
@@ -124,6 +82,7 @@ function runBatch()
     }
   }
 
+  // ログ出力
   writeLog(LOG_RUN, 'バッチ処理終了');
   debugEcho('バッチ処理終了');
 }
