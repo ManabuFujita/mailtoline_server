@@ -1,6 +1,6 @@
 <?php
 
-function newGmailClient()
+function newGmailClient(): Google_Client
 {
   $client = new Google_Client();
   $client->setApplicationName('Gmail API PHP Quickstart');
@@ -12,7 +12,7 @@ function newGmailClient()
   return $client;
 }
 
-function updateTokens($db, $emailList)
+function updateTokens(Mail_gmail $db, array $emailList): void
 {
   foreach ($emailList as $l)
   {
@@ -31,7 +31,7 @@ function updateTokens($db, $emailList)
   }
 }
 
-function updateToken($db, $lineId, $email, $token)
+function updateToken(Mail_gmail $db, string $lineId, string $email, array $token): void
 {
   $client = newGmailClient();
 
@@ -89,7 +89,7 @@ function updateToken($db, $lineId, $email, $token)
   }
 }
 
-function getToken($l)
+function getToken(array $l): array
 {
   // $lineId = $l['line_id'];
   // $email = $l['email'];
@@ -119,7 +119,7 @@ function getToken($l)
   return $token;
 }
 
-function getGmailClient($token)
+function getGmailClient(array $token): Google_Client
 {
     $client = newGmailClient();
     $client->setAccessToken($token);
@@ -172,18 +172,18 @@ function getGmailClient($token)
 //   return $cntMatch;
 // }
 
-function datetimeFormat2timestamp($datetime_format)
+function datetimeFormat2timestamp(string $datetime_format): int
 {
   $datetime = new Datetime($datetime_format);
   return datetime2timestamp($datetime);
 }
 
-function datetime2timestamp($datetime)
+function datetime2timestamp(DateTime $datetime): int
 {
   return $datetime->getTimestamp();
 }
 
-function timestamp2datetime($timestamp)
+function timestamp2datetime(int $timestamp): string
 {
   return date('Y-m-d H:i:s', $timestamp);
 }

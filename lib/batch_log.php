@@ -1,14 +1,14 @@
 <?php
 
 // ログ書き出し処理
-function writeLog($file, $message)
+function writeLog(string $file, string $message): void
 {
   error_log('[' . date('Y-m-d H:i:s') . '] ' . $message . "\n", 3, $file);
 }
 
 // 開発環境のみechoするデバッグ用処理
 // $breakBeforeにtrueを指定すると、出力の前に改行を入れる
-function debugEcho($message, $breakBefore = false)
+function debugEcho(string $message, bool $breakBefore = false): void
 {
   $env = getenv('APP_ENV') ?: 'dev';
 
@@ -20,7 +20,7 @@ function debugEcho($message, $breakBefore = false)
 }
 
 // 管理者に通知する処理
-function notifyAdmin($email, $errorMessage)
+function notifyAdmin(string $email, string $errorMessage): void
 {
     $to = ADMIN_EMAIL; // 管理者メールアドレス
     $subject = '[mailtoline:エラー] バッチ処理でエラーが発生しました';

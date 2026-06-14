@@ -1,6 +1,6 @@
 <?php
 
-function processFilter($f, $db, $dateStart, $dateEnd)
+function processFilter(array $f, Mail_gmail $db, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): void
 {
   $gmailAddress = $f['email'];
   $lineId = $f['line_id'];
@@ -81,7 +81,7 @@ function processFilter($f, $db, $dateStart, $dateEnd)
   }
 }
 
-function buildFilter($f, $dateStart, $dateEnd)
+function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): string
 {
     // 昨日の対象メール数を取得
   // $filter = 'to:'.$email; // 自分のメールボックスでも、Toが自分とは限らないため、Toは設定しない
@@ -99,7 +99,7 @@ function buildFilter($f, $dateStart, $dateEnd)
   return $filter;
 }
 
-function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress)
+function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, Mail_gmail $db, string $lineId, string $gmailAddress): array
 {
   $messages = '';
   $sendLogs = [];
@@ -139,7 +139,7 @@ function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAdd
 }
 
 // 送信が成功した場合のみ、送信履歴をDBに登録する
-function logSentMessages($lineId, $gmailAddress, $sendLogs, $db, $isSucceeded)
+function logSentMessages(string $lineId, string $gmailAddress, array $sendLogs, Mail_gmail $db, bool $isSucceeded): void
 {
   if (!$isSucceeded)
   {
@@ -153,7 +153,7 @@ function logSentMessages($lineId, $gmailAddress, $sendLogs, $db, $isSucceeded)
 }
 
 // 通知メッセージのフォーマット
-function formatMessage($data)
+function formatMessage(array $data): string
 {
   return '■Date:' . "\n". $data['date']
     . "\n" . '■From:' . "\n". $data['from']
@@ -161,7 +161,7 @@ function formatMessage($data)
     ;
 }
 
-function getData($headers)
+function getData(array $headers): array
 {
   // 結果からデータを抽出
   $subject_key = array_search('Subject', array_column($headers, 'name')); // ヘッダーオブジェクトの配列から件名オブジェクトの連番キーを取得

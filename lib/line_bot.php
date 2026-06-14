@@ -10,7 +10,7 @@ use LINE\LINEBot\MessageBuilder\Emoji;
 // -----------------------------
 // webhook処理
 // -----------------------------
-function handleWebhook()
+function handleWebhook(): void
 {
   // リクエストヘッダーの x-line-signature を取得
   $signature = $_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE];
@@ -26,7 +26,7 @@ function handleWebhook()
 }
 
 // 署名を検証する関数
-function validateSignature($body, $signature)
+function validateSignature(string $body, string $signature): bool
 {
   global $line_channel_access_token;
   global $line_channel_secret;
@@ -40,7 +40,7 @@ function validateSignature($body, $signature)
 }
 
 
-function reply()
+function reply(): void
 {
   global $line_channel_access_token;
   global $line_channel_secret;
@@ -124,7 +124,7 @@ function reply()
 }
 
 // プッシュメッセージ
-function push($lineId, $message)
+function push(string $lineId, string $message): bool
 {
   global $line_channel_access_token;
   global $line_channel_secret;
@@ -148,7 +148,7 @@ function push($lineId, $message)
 }
 
 // ブロードキャスト
-function broadcast($message)
+function broadcast(string $message): void
 {
   global $line_channel_access_token;
   global $line_channel_secret;

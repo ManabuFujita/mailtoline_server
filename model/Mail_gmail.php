@@ -6,20 +6,20 @@ Config::setConfigDirectory(__DIR__ . '/../config');
 class Mail_gmail
 {
   // setting ************************
-  private $db_user;
-  private $db_pass;
+  private string $db_user;
+  private string $db_pass;
 
-  private $db_host;
-  private $db_name;
-  private $db_char;
-  private $db_type;
+  private string $db_host;
+  private string $db_name;
+  private string $db_char;
+  private string $db_type;
 
-  private $table_gmail;
-  private $table_filter;
-  
+  private string $table_gmail;
+  private string $table_filter;
+
   // private $id;
 
-  private $pdo;
+  private PDO $pdo;
   //*********************************
 
   function __construct()
@@ -37,8 +37,8 @@ class Mail_gmail
     $this->table_filter = 'mailfilters';
   }
   
-  public function connect()
-  {    
+  public function connect(): PDO
+  {
     // $this->id = $id;
     
     $dsn = "$this->db_type:host=$this->db_host;dbname=$this->db_name;charset=$this->db_char";
@@ -59,7 +59,7 @@ class Mail_gmail
     return $this->pdo;
   }
 
-  public function updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created)
+  public function updateToken(string $lineId, string $email, string $accessToken, string $refreshToken, string $idToken, int $expiresIn, string $created): void
   {
     try {
       $this->pdo->beginTransaction(); // トランザクション開始
@@ -87,7 +87,7 @@ class Mail_gmail
     }
   }
 
-  public function getAllGmail()
+  public function getAllGmail(): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -109,7 +109,7 @@ class Mail_gmail
     
   }
 
-  public function getMyGmail($lineId)
+  public function getMyGmail(string $lineId): array|null
   {
     try {
       $sql = "SELECT * FROM " . $this->table_gmail . " WHERE line_id = '" . $lineId . "'";
@@ -130,7 +130,7 @@ class Mail_gmail
     
   }
 
-  public function getAllFilterWithToken()
+  public function getAllFilterWithToken(): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -174,7 +174,7 @@ class Mail_gmail
     
   }
 
-  public function getMyFilter($lineId, $email)
+  public function getMyFilter(string $lineId, string $email): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -204,7 +204,7 @@ class Mail_gmail
     
   }
 
-  public function insertSendlog($lineId, $email, $mailId, $title, $from, $senddate)
+  public function insertSendlog(string $lineId, string $email, string $mailId, string $title, string $from, DateTimeImmutable $senddate): void
   {
     try {
       $this->pdo->beginTransaction(); // トランザクション開始
@@ -236,7 +236,7 @@ class Mail_gmail
   }
 
   
-  public function getSendlog($lineId, $email, $mailId)
+  public function getSendlog(string $lineId, string $email, string $mailId): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -257,7 +257,7 @@ class Mail_gmail
     }
   }
 
-  public function isSended($lineId, $email, $mailId)
+  public function isSended(string $lineId, string $email, string $mailId): bool|null
   {
     try {
       $data = $this->getSendlog($lineId, $email, $mailId);
