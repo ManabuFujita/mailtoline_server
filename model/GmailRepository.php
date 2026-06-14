@@ -237,6 +237,35 @@ class GmailRepository extends Database
   }
 
   /**
+   * 指定したline_idについて、指定した日時が含まれる月の送信件数を取得する
+   */
+  public function getSendlogCountThisMonth(string $lineId, DateTimeImmutable $now): int
+  {
+    try {
+      $monthStart = $now->modify('first day of this month')->format('Y-m-d 00:00:00');
+      $monthEnd = $now->modify('first day of next month')->format('Y-m-d 00:00:00');
+
+      $sql = "SELECT COUNT(*) FROM sendlogs"
+        . " WHERE line_id = :line_id AND senddate >= :month_start AND senddate < :month_end";
+
+      $stmh = $this->pdo->prepare($sql);
+
+      $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
+      $stmh->bindValue(':month_start', $monthStart, PDO::PARAM_STR);
+      $stmh->bindValue(':month_end', $monthEnd, PDO::PARAM_STR);
+
+      $stmh->execute();
+
+      return (int)$stmh->fetchColumn();
+
+    } catch (PDOException $Exception) {
+
+      print "エラー:".$Exception->getMessage();
+      return 0;
+    }
+  }
+
+  /**
    * 指定したmail_idが既に送信済みかどうかを判定する
    */
   public function isSended(string $lineId, string $email, string $mailId): bool|null
