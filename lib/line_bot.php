@@ -16,12 +16,13 @@ function handleWebhook(): void
   $signature = $_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE];
 
   // リクエストボディを取得
+  // php://inputは一度しか読み取れない場合があるため、ここで読み取った内容をreply()に渡す
   $request_body = file_get_contents('php://input');
 
   // 署名が正しい場合
   if (validateSignature($request_body, $signature))
   {
-    reply();
+    reply($request_body, $signature);
   }
 }
 
@@ -46,20 +47,14 @@ function validateSignature(string $body, string $signature): bool
 /**
  * LINEからのメッセージイベントに応じて返信メッセージを作成し、返信する
  */
-function reply(): void
+function reply(string $inputData, string $signature): void
 {
   global $line_channel_access_token;
   global $line_channel_secret;
 
-  //LINEBOTにPOSTで送られてきた生データの取得
-  $inputData = file_get_contents("php://input");
-
-  // $fileSend->writeFileAdd($inputData);
-
   //LINEBOTSDKの設定
   $httpClient = new CurlHTTPClient($line_channel_access_token);
   $bot = new LINEBot($httpClient, ['channelSecret' => $line_channel_secret]);
-  $signature = $_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE];
   $events = $bot->parseEventRequest($inputData, $signature);
 
   //大量にメッセージが送られると複数分のデータが同時に送られてくるため、foreachをしている。
@@ -78,47 +73,12 @@ function reply(): void
     switch ($message)
     {
       case '設定確認':
-        // $replyMessage = $lineId;
-        $replyMessage = '';
-
-        // メールアドレスとフィルターが設定してあれば、設定を返す
         $db = new GmailRepository;
-        $emailList = $db->getMyGmail($lineId);
-        foreach ($emailList as $l)
-        {
-          $lineId = $l['line_id'];
-          $email = $l['email'];
-
-          $filters = $db->getMyFilter($lineId, $email);
-          foreach ($filters as $f)
-          {
-            $mailFrom = $f['mail_from'];
-            $subject = $f['subject'];
-
-            if ($replyMessage == '')
-            {
-              $replyMessage .= "➡設定フィルター📨\n";
-            } else {
-              $replyMessage .= "\n";
-            }
-
-            $replyMessage .= "To: " . $email
-              . "\n" . "From: " . $mailFrom
-              . "\n" . "Subject: " . $subject
-              . "\n";
-          }
-        }
-
-        // 未設定のメッセージ
-        if ($replyMessage == '')
-        {
-          $replyMessage = '💡設定が登録されていません' . "\n" . 'webサイト（下のメニューボタン）から登録してください🏠';
-        }
-
+        $replyMessage = buildSettingsMessage($db, $lineId);
         break;
 
       default:
-        $replyMessage = '⬇下のメニューボタンから操作してください🏠ご意見ご質問等は気づいたときに確認します🍔';
+        $replyMessage = '⬇下のメニューボタンから操作してください🏠';
         break;
     }
 
@@ -127,6 +87,50 @@ function reply(): void
     $sendMessage->add($textMessageBuilder);
     $bot->replyMessage($event->getReplyToken(), $sendMessage);
   }
+}
+
+/**
+ * 「設定確認」に対する返信メッセージを組み立てる
+ * 登録済みのメールアドレスとフィルターを一覧表示し、未登録の場合は登録案内を返す
+ */
+function buildSettingsMessage(GmailRepository $db, string $lineId): string
+{
+  $replyMessage = '';
+
+  // メールアドレスとフィルターが設定してあれば、設定を返す
+  $emailList = $db->getMyGmail($lineId);
+  foreach ($emailList as $l)
+  {
+    $lineId = $l['line_id'];
+    $email = $l['email'];
+
+    $filters = $db->getMyFilter($lineId, $email);
+    foreach ($filters as $f)
+    {
+      $mailFrom = $f['mail_from'];
+      $subject = $f['subject'];
+
+      if ($replyMessage == '')
+      {
+        $replyMessage .= "➡設定フィルター📨\n";
+      } else {
+        $replyMessage .= "\n";
+      }
+
+      $replyMessage .= "To: " . $email
+        . "\n" . "From: " . $mailFrom
+        . "\n" . "Subject: " . $subject
+        . "\n";
+    }
+  }
+
+  // 未設定のメッセージ
+  if ($replyMessage == '')
+  {
+    $replyMessage = '💡設定が登録されていません' . "\n" . 'webサイト（下のメニューボタン）から登録してください🏠';
+  }
+
+  return $replyMessage;
 }
 
 /**
