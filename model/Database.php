@@ -15,6 +15,9 @@ abstract class Database
 
   protected PDO $pdo;
 
+  /**
+   * 設定ファイルからDB接続情報を読み込み、接続する
+   */
   function __construct()
   {
     $this->db_user = Config::get('db_user');
@@ -28,6 +31,10 @@ abstract class Database
     $this->connect();
   }
 
+  /**
+   * DBに接続し、PDOインスタンスを返す
+   * 接続に失敗した場合はエラーメッセージを出力して終了する
+   */
   public function connect(): PDO
   {
     $dsn = "$this->db_type:host=$this->db_host;dbname=$this->db_name;charset=$this->db_char";

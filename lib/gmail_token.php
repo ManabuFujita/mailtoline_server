@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Gmail API用のGoogleクライアントを生成する
+ */
 function newGmailClient(): Google_Client
 {
   $client = new Google_Client();
@@ -12,6 +15,9 @@ function newGmailClient(): Google_Client
   return $client;
 }
 
+/**
+ * 登録済みの全メールアドレスについて、Gmailトークンを更新する
+ */
 function updateTokens(GmailRepository $db, array $emailList): void
 {
   foreach ($emailList as $l)
@@ -31,6 +37,9 @@ function updateTokens(GmailRepository $db, array $emailList): void
   }
 }
 
+/**
+ * Gmailトークンが期限切れの場合、リフレッシュしてDBを更新する
+ */
 function updateToken(GmailRepository $db, string $lineId, string $email, array $token): void
 {
   $client = newGmailClient();
@@ -59,6 +68,9 @@ function updateToken(GmailRepository $db, string $lineId, string $email, array $
   }
 }
 
+/**
+ * DBから取得したアカウント情報からGmailトークンの配列を組み立てる
+ */
 function getToken(array $l): array
 {
   $accessToken = $l['access_token'];
@@ -86,6 +98,10 @@ function getToken(array $l): array
   return $token;
 }
 
+/**
+ * トークンをセットしたGmail APIクライアントを取得する
+ * トークンが期限切れの場合は、リフレッシュトークンで更新する（無ければ認可フローを実行する）
+ */
 function getGmailClient(array $token): Google_Client
 {
     $client = newGmailClient();
@@ -139,17 +155,26 @@ function getGmailClient(array $token): Google_Client
 //   return $cntMatch;
 // }
 
+/**
+ * 'Y-m-d H:i:s'形式の日時文字列をUnixタイムスタンプに変換する
+ */
 function datetimeFormat2timestamp(string $datetime_format): int
 {
   $datetime = new Datetime($datetime_format);
   return datetime2timestamp($datetime);
 }
 
+/**
+ * DateTimeをUnixタイムスタンプに変換する
+ */
 function datetime2timestamp(DateTime $datetime): int
 {
   return $datetime->getTimestamp();
 }
 
+/**
+ * Unixタイムスタンプを'Y-m-d H:i:s'形式の日時文字列に変換する
+ */
 function timestamp2datetime(int $timestamp): string
 {
   return date('Y-m-d H:i:s', $timestamp);

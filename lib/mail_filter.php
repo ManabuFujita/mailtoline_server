@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * 1件のフィルター設定に対し、対象期間のメールを検索してLINEに通知する
+ */
 function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): void
 {
   $gmailAddress = $f['email'];
@@ -81,6 +84,9 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
   }
 }
 
+/**
+ * フィルター設定と対象期間からGmail検索クエリを組み立てる
+ */
 function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): string
 {
     // 昨日の対象メール数を取得
@@ -99,6 +105,11 @@ function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $
   return $filter;
 }
 
+/**
+ * 検索結果のメールから未送信分の通知メッセージと送信ログ用データを組み立てる
+ *
+ * @return array{messages: string, sendLogs: array} 通知メッセージ本文と送信ログ用データの配列
+ */
 function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, GmailRepository $db, string $lineId, string $gmailAddress): array
 {
   $messages = '';
@@ -138,7 +149,9 @@ function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results
   return ['messages' => $messages, 'sendLogs' => $sendLogs];
 }
 
-// 送信が成功した場合のみ、送信履歴をDBに登録する
+/**
+ * 送信が成功した場合のみ、送信履歴をDBに登録する
+ */
 function logSentMessages(string $lineId, string $gmailAddress, array $sendLogs, GmailRepository $db, bool $isSucceeded): void
 {
   if (!$isSucceeded)
@@ -152,7 +165,9 @@ function logSentMessages(string $lineId, string $gmailAddress, array $sendLogs, 
   }
 }
 
-// 通知メッセージのフォーマット
+/**
+ * 通知メッセージのフォーマット
+ */
 function formatMessage(array $data): string
 {
   return '■Date:' . "\n". $data['date']
@@ -161,6 +176,9 @@ function formatMessage(array $data): string
     ;
 }
 
+/**
+ * メールヘッダーから件名・日時・From・Toを抽出する
+ */
 function getData(array $headers): array
 {
   // 結果からデータを抽出

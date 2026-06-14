@@ -7,6 +7,9 @@ class GmailRepository extends Database
   private string $table_gmail;
   private string $table_filter;
 
+  /**
+   * 利用するテーブル名を設定する
+   */
   function __construct()
   {
     parent::__construct();
@@ -14,6 +17,9 @@ class GmailRepository extends Database
     $this->table_filter = 'mailfilters';
   }
 
+  /**
+   * 指定したline_id/emailのGmailトークンを更新する
+   */
   public function updateToken(string $lineId, string $email, string $accessToken, string $refreshToken, string $idToken, int $expiresIn, string $created): void
   {
     try {
@@ -42,6 +48,9 @@ class GmailRepository extends Database
     }
   }
 
+  /**
+   * 登録済みの全Gmailアカウントを取得する
+   */
   public function getAllGmail(): array|null
   {
     try {
@@ -64,6 +73,9 @@ class GmailRepository extends Database
     
   }
 
+  /**
+   * 指定したline_idに紐づくGmailアカウントを取得する
+   */
   public function getMyGmail(string $lineId): array|null
   {
     try {
@@ -85,6 +97,9 @@ class GmailRepository extends Database
     
   }
 
+  /**
+   * 全フィルター設定を、対応するGmailトークン情報と結合して取得する
+   */
   public function getAllFilterWithToken(): array|null
   {
     try {
@@ -129,6 +144,9 @@ class GmailRepository extends Database
     
   }
 
+  /**
+   * 指定したline_id/emailのフィルター設定を取得する
+   */
   public function getMyFilter(string $lineId, string $email): array|null
   {
     try {
@@ -159,6 +177,9 @@ class GmailRepository extends Database
     
   }
 
+  /**
+   * 送信履歴をsendlogsテーブルに登録する
+   */
   public function insertSendlog(string $lineId, string $email, string $mailId, string $title, string $from, DateTimeImmutable $senddate): void
   {
     try {
@@ -191,6 +212,9 @@ class GmailRepository extends Database
   }
 
   
+  /**
+   * 指定したline_id/email/mail_idの送信履歴を取得する
+   */
   public function getSendlog(string $lineId, string $email, string $mailId): array|null
   {
     try {
@@ -212,6 +236,9 @@ class GmailRepository extends Database
     }
   }
 
+  /**
+   * 指定したmail_idが既に送信済みかどうかを判定する
+   */
   public function isSended(string $lineId, string $email, string $mailId): bool|null
   {
     try {

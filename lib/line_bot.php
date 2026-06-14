@@ -7,9 +7,9 @@ use LINE\LINEBot\MessageBuilder\MultiMessageBuilder;
 use \LINE\LINEBot\Constant\HTTPHeader;
 use LINE\LINEBot\MessageBuilder\Emoji;
 
-// -----------------------------
-// webhook処理
-// -----------------------------
+/**
+ * LINEからのWebhookリクエストを受け取り、署名検証後に返信処理を行う
+ */
 function handleWebhook(): void
 {
   // リクエストヘッダーの x-line-signature を取得
@@ -25,7 +25,10 @@ function handleWebhook(): void
   }
 }
 
-// 署名を検証する関数
+/**
+ * リクエストボディとチャネルシークレットから算出した署名が、
+ * リクエストヘッダーの署名と一致するか検証する
+ */
 function validateSignature(string $body, string $signature): bool
 {
   global $line_channel_access_token;
@@ -40,6 +43,9 @@ function validateSignature(string $body, string $signature): bool
 }
 
 
+/**
+ * LINEからのメッセージイベントに応じて返信メッセージを作成し、返信する
+ */
 function reply(): void
 {
   global $line_channel_access_token;
@@ -123,7 +129,11 @@ function reply(): void
   }
 }
 
-// プッシュメッセージ
+/**
+ * 指定したLINEユーザーにプッシュメッセージを送信する
+ *
+ * @return bool 送信が成功したかどうか
+ */
 function push(string $lineId, string $message): bool
 {
   global $line_channel_access_token;
@@ -147,7 +157,9 @@ function push(string $lineId, string $message): bool
   return $response->isSucceeded();
 }
 
-// ブロードキャスト
+/**
+ * 全友達にメッセージをブロードキャスト送信する
+ */
 function broadcast(string $message): void
 {
   global $line_channel_access_token;
