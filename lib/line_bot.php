@@ -7,10 +7,10 @@ use LINE\LINEBot\MessageBuilder\MultiMessageBuilder;
 use \LINE\LINEBot\Constant\HTTPHeader;
 use LINE\LINEBot\MessageBuilder\Emoji;
 
-// -----------------------------
-// webhook処理
-// -----------------------------
-function handleWebhook()
+/**
+ * LINEからのWebhookリクエストを受け取り、署名検証後に返信処理を行う
+ */
+function handleWebhook(): void
 {
   // リクエストヘッダーの x-line-signature を取得
   $signature = $_SERVER["HTTP_".HTTPHeader::LINE_SIGNATURE];
@@ -25,8 +25,11 @@ function handleWebhook()
   }
 }
 
-// 署名を検証する関数
-function validateSignature($body, $signature)
+/**
+ * リクエストボディとチャネルシークレットから算出した署名が、
+ * リクエストヘッダーの署名と一致するか検証する
+ */
+function validateSignature(string $body, string $signature): bool
 {
   global $line_channel_access_token;
   global $line_channel_secret;
@@ -40,7 +43,10 @@ function validateSignature($body, $signature)
 }
 
 
-function reply()
+/**
+ * LINEからのメッセージイベントに応じて返信メッセージを作成し、返信する
+ */
+function reply(): void
 {
   global $line_channel_access_token;
   global $line_channel_secret;
@@ -76,7 +82,7 @@ function reply()
         $replyMessage = '';
 
         // メールアドレスとフィルターが設定してあれば、設定を返す
-        $db = new Mail_gmail;
+        $db = new GmailRepository;
         $emailList = $db->getMyGmail($lineId);
         foreach ($emailList as $l)
         {
@@ -123,8 +129,12 @@ function reply()
   }
 }
 
-// プッシュメッセージ
-function push($lineId, $message)
+/**
+ * 指定したLINEユーザーにプッシュメッセージを送信する
+ *
+ * @return bool 送信が成功したかどうか
+ */
+function push(string $lineId, string $message): bool
 {
   global $line_channel_access_token;
   global $line_channel_secret;
@@ -143,10 +153,14 @@ function push($lineId, $message)
   // echo '<pre>';
   // print_r($response);
   // echo '</pre>';
+
+  return $response->isSucceeded();
 }
 
-// ブロードキャスト
-function broadcast($message)
+/**
+ * 全友達にメッセージをブロードキャスト送信する
+ */
+function broadcast(string $message): void
 {
   global $line_channel_access_token;
   global $line_channel_secret;

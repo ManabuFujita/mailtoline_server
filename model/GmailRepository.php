@@ -1,65 +1,26 @@
 <?php
 
-require_once(__DIR__ . '/../config.php');
-Config::setConfigDirectory(__DIR__ . '/../config');
+require_once(__DIR__ . '/Database.php');
 
-class Mail_gmail
+class GmailRepository extends Database
 {
-  // setting ************************
-  private $db_user;
-  private $db_pass;
+  private string $table_gmail;
+  private string $table_filter;
 
-  private $db_host;
-  private $db_name;
-  private $db_char;
-  private $db_type;
-
-  private $table_gmail;
-  private $table_filter;
-  
-  // private $id;
-
-  private $pdo;
-  //*********************************
-
+  /**
+   * 利用するテーブル名を設定する
+   */
   function __construct()
   {
-    $this->db_user = Config::get('db_user');
-    $this->db_pass = Config::get('db_pass');
-
-    $this->db_host = Config::get('db_host');
-    $this->db_name = Config::get('db_name');
-    $this->db_char = Config::get('db_char');
-    $this->db_type = Config::get('db_type'); // MySQL
-
-    $this->connect();
+    parent::__construct();
     $this->table_gmail = 'mail_gmails';
     $this->table_filter = 'mailfilters';
   }
-  
-  public function connect()
-  {    
-    // $this->id = $id;
-    
-    $dsn = "$this->db_type:host=$this->db_host;dbname=$this->db_name;charset=$this->db_char";
 
-    // connect
-    try {
-      $this->pdo = new PDO($dsn, $this->db_user, $this->db_pass);
-
-      // default setting
-      $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-      $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-      // print '接続しました...<br>';
-
-    } catch(PDOException $Exception)
-    {
-      die('エラー:'.$Exception->getMessage());
-    }
-    return $this->pdo;
-  }
-
-  public function updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created)
+  /**
+   * 指定したline_id/emailのGmailトークンを更新する
+   */
+  public function updateToken(string $lineId, string $email, string $accessToken, string $refreshToken, string $idToken, int $expiresIn, string $created): void
   {
     try {
       $this->pdo->beginTransaction(); // トランザクション開始
@@ -87,7 +48,10 @@ class Mail_gmail
     }
   }
 
-  public function getAllGmail()
+  /**
+   * 登録済みの全Gmailアカウントを取得する
+   */
+  public function getAllGmail(): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -109,7 +73,10 @@ class Mail_gmail
     
   }
 
-  public function getMyGmail($lineId)
+  /**
+   * 指定したline_idに紐づくGmailアカウントを取得する
+   */
+  public function getMyGmail(string $lineId): array|null
   {
     try {
       $sql = "SELECT * FROM " . $this->table_gmail . " WHERE line_id = '" . $lineId . "'";
@@ -130,7 +97,10 @@ class Mail_gmail
     
   }
 
-  public function getAllFilterWithToken()
+  /**
+   * 全フィルター設定を、対応するGmailトークン情報と結合して取得する
+   */
+  public function getAllFilterWithToken(): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -174,7 +144,10 @@ class Mail_gmail
     
   }
 
-  public function getMyFilter($lineId, $email)
+  /**
+   * 指定したline_id/emailのフィルター設定を取得する
+   */
+  public function getMyFilter(string $lineId, string $email): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -204,7 +177,10 @@ class Mail_gmail
     
   }
 
-  public function insertSendlog($lineId, $email, $mailId, $title, $from, $senddate)
+  /**
+   * 送信履歴をsendlogsテーブルに登録する
+   */
+  public function insertSendlog(string $lineId, string $email, string $mailId, string $title, string $from, DateTimeImmutable $senddate): void
   {
     try {
       $this->pdo->beginTransaction(); // トランザクション開始
@@ -236,7 +212,10 @@ class Mail_gmail
   }
 
   
-  public function getSendlog($lineId, $email, $mailId)
+  /**
+   * 指定したline_id/email/mail_idの送信履歴を取得する
+   */
+  public function getSendlog(string $lineId, string $email, string $mailId): array|null
   {
     try {
       // $sql = "SELECT * FROM " . $this->table_gmail;
@@ -257,7 +236,10 @@ class Mail_gmail
     }
   }
 
-  public function isSended($lineId, $email, $mailId)
+  /**
+   * 指定したmail_idが既に送信済みかどうかを判定する
+   */
+  public function isSended(string $lineId, string $email, string $mailId): bool|null
   {
     try {
       $data = $this->getSendlog($lineId, $email, $mailId);

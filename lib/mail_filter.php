@@ -1,6 +1,9 @@
 <?php
 
-function processFilter($f, $db, $dateStart, $dateEnd)
+/**
+ * 1件のフィルター設定に対し、対象期間のメールを検索してLINEに通知する
+ */
+function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): void
 {
   $gmailAddress = $f['email'];
   $lineId = $f['line_id'];
@@ -56,15 +59,13 @@ function processFilter($f, $db, $dateStart, $dateEnd)
 
     $filter_list = [];
 
-    $messages = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
+    $result = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
+    $messages = $result['messages'];
+    $sendLogs = $result['sendLogs'];
 
     // Line通知
     if ($messages != '')
     {
-      // echo '<br>';
-      // echo 'Line通知';
-      // echo '<br>';
-
       $messages
         = '💡メール通知' . "\n"
         . "\n"
@@ -73,12 +74,20 @@ function processFilter($f, $db, $dateStart, $dateEnd)
       // echo '<pre>';
       // print_r($filter_list);
       // echo '</pre>';
-      push($lineId, $messages);
+
+      // LINEに通知
+      $isSucceeded = push($lineId, $messages);
+
+      // 送信が正常に終了してからDB登録
+      logSentMessages($lineId, $gmailAddress, $sendLogs, $db, $isSucceeded);
     }
   }
 }
 
-function buildFilter($f, $dateStart, $dateEnd)
+/**
+ * フィルター設定と対象期間からGmail検索クエリを組み立てる
+ */
+function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): string
 {
     // 昨日の対象メール数を取得
   // $filter = 'to:'.$email; // 自分のメールボックスでも、Toが自分とは限らないため、Toは設定しない
@@ -96,9 +105,15 @@ function buildFilter($f, $dateStart, $dateEnd)
   return $filter;
 }
 
-function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress)
+/**
+ * 検索結果のメールから未送信分の通知メッセージと送信ログ用データを組み立てる
+ *
+ * @return array{messages: string, sendLogs: array} 通知メッセージ本文と送信ログ用データの配列
+ */
+function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, GmailRepository $db, string $lineId, string $gmailAddress): array
 {
   $messages = '';
+  $sendLogs = [];
   foreach ($filter_results->getMessages() as $r)
   {
     $mailId = $r->getId();
@@ -106,12 +121,10 @@ function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAdd
     // echo "mailId:" . $mailId;
 
     // 送信済みチェック
-    // 同一IDは再送しない
+    // 同一mailIDは再送しない
     if ($db->isSended($lineId, $gmailAddress, $mailId))
     {
-      // echo '<br>';
-      // echo '通知済み';
-      // echo '<br>';
+      // 通知済みのメールはスキップ
     } else {
 
       // ToDo:メール内容取得
@@ -125,25 +138,48 @@ function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAdd
       {
         $messages .= "\n" . "\n" . '--------------------' . "\n" . "\n";
       }
-      $messages
-        .= '■Date:' . "\n". $data['date']
-        . "\n" . '■From:' . "\n". $data['from']
-        . "\n" . '■Subject:' . "\n". $data['subject']
-        ;
+      $messages .= formatMessage($data);
 
-      // DB登録
+      // DB登録（送信後にまとめて登録するため、ここではデータを集めるだけ）
       $now = new DateTimeImmutable();
-      // echo '<br>';
-      // echo 'DB登録';
-      // echo '<br>';
-      $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from'], $now);
+      $sendLogs[] = ['mailId' => $mailId, 'subject' => $data['subject'], 'from' => $data['from'], 'now' => $now];
     }
   }
 
-  return $messages;
+  return ['messages' => $messages, 'sendLogs' => $sendLogs];
 }
 
-function getData($headers)
+/**
+ * 送信が成功した場合のみ、送信履歴をDBに登録する
+ */
+function logSentMessages(string $lineId, string $gmailAddress, array $sendLogs, GmailRepository $db, bool $isSucceeded): void
+{
+  if (!$isSucceeded)
+  {
+    return;
+  }
+
+  foreach ($sendLogs as $log)
+  {
+    $db->insertSendlog($lineId, $gmailAddress, $log['mailId'], $log['subject'], $log['from'], $log['now']);
+  }
+}
+
+/**
+ * 通知メッセージのフォーマット
+ */
+function formatMessage(array $data): string
+{
+  return '■Date:' . "\n". $data['date']
+    . "\n" . '■From:' . "\n". $data['from']
+    . "\n" . '■Subject:' . "\n". $data['subject']
+    ;
+}
+
+/**
+ * メールヘッダーから件名・日時・From・Toを抽出する
+ */
+function getData(array $headers): array
 {
   // 結果からデータを抽出
   $subject_key = array_search('Subject', array_column($headers, 'name')); // ヘッダーオブジェクトの配列から件名オブジェクトの連番キーを取得

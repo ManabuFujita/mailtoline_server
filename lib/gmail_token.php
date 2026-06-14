@@ -1,6 +1,9 @@
 <?php
 
-function newGmailClient()
+/**
+ * Gmail API用のGoogleクライアントを生成する
+ */
+function newGmailClient(): Google_Client
 {
   $client = new Google_Client();
   $client->setApplicationName('Gmail API PHP Quickstart');
@@ -12,7 +15,10 @@ function newGmailClient()
   return $client;
 }
 
-function updateTokens($db, $emailList)
+/**
+ * 登録済みの全メールアドレスについて、Gmailトークンを更新する
+ */
+function updateTokens(GmailRepository $db, array $emailList): void
 {
   foreach ($emailList as $l)
   {
@@ -25,75 +31,48 @@ function updateTokens($db, $emailList)
       updateToken($db, $lineId, $email, $token);
 
     } catch (Exception $e) {
-      writeLog(LOG_ERROR, '[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage());
+      // writeLog(LOG_ERROR, '[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage());
       continue;
     }
   }
 }
 
-function updateToken($db, $lineId, $email, $token)
+/**
+ * Gmailトークンが期限切れの場合、リフレッシュしてDBを更新する
+ */
+function updateToken(GmailRepository $db, string $lineId, string $email, array $token): void
 {
   $client = newGmailClient();
 
   $client->setAccessToken($token);
 
-  // echo "<br>";
-  // echo "---------<br>";
-  // echo $email;
-
-
-  // echo '<br>';
-  // echo '更新前';
-  // echo '<pre>';
-  // print_r($token);
-  // echo '</pre>';
-  // echo '<br>';
-
-  // If there is no previous token or it's expired.
+  // トークンが期限切れの場合は更新する
   if ($client->isAccessTokenExpired())
   {
-    // Refresh the token if possible, else fetch a new one.
-    // if ($refreshToken != null)
-    // {
+    $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
 
+    $token = $client->getAccessToken();
+    $accessToken = $token['access_token'];
+    $refreshToken = $token['refresh_token'];
+    $idToken = $token['id_token'];
+    $expiresIn = $token['expires_in'];
+    // $created = date('Y-m-d H:i:s', $token['created']);
+    $created = timestamp2datetime($token['created']);
 
+    // DB更新
+    $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
 
-        $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
-
-        $token = $client->getAccessToken();
-
-        // echo '<br>';
-        // echo '更新後';
-        // echo '<pre>';
-        // print_r($token);
-        // echo '</pre>';
-        // echo '<br>';
-
-
-
-        $accessToken = $token['access_token'];
-        $refreshToken = $token['refresh_token'];
-        $idToken = $token['id_token'];
-        $expiresIn = $token['expires_in'];
-        // $created = date('Y-m-d H:i:s', $token['created']);
-        $created = timestamp2datetime($token['created']);
-
-
-
-        $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
-
-        debugEcho('Gmailトークンを更新しました。: ' . $email);
-    // }
+    debugEcho('Gmailトークンを更新しました。: ' . $email);
   } else {
     debugEcho('Gmailトークンの更新不要。: ' . $email);
   }
 }
 
-function getToken($l)
+/**
+ * DBから取得したアカウント情報からGmailトークンの配列を組み立てる
+ */
+function getToken(array $l): array
 {
-  // $lineId = $l['line_id'];
-  // $email = $l['email'];
-
   $accessToken = $l['access_token'];
   $refreshToken = $l['refresh_token'];
   $idToken = $l['id_token'];
@@ -119,7 +98,11 @@ function getToken($l)
   return $token;
 }
 
-function getGmailClient($token)
+/**
+ * トークンをセットしたGmail APIクライアントを取得する
+ * トークンが期限切れの場合は、リフレッシュトークンで更新する（無ければ認可フローを実行する）
+ */
+function getGmailClient(array $token): Google_Client
 {
     $client = newGmailClient();
     $client->setAccessToken($token);
@@ -172,18 +155,27 @@ function getGmailClient($token)
 //   return $cntMatch;
 // }
 
-function datetimeFormat2timestamp($datetime_format)
+/**
+ * 'Y-m-d H:i:s'形式の日時文字列をUnixタイムスタンプに変換する
+ */
+function datetimeFormat2timestamp(string $datetime_format): int
 {
   $datetime = new Datetime($datetime_format);
   return datetime2timestamp($datetime);
 }
 
-function datetime2timestamp($datetime)
+/**
+ * DateTimeをUnixタイムスタンプに変換する
+ */
+function datetime2timestamp(DateTime $datetime): int
 {
   return $datetime->getTimestamp();
 }
 
-function timestamp2datetime($timestamp)
+/**
+ * Unixタイムスタンプを'Y-m-d H:i:s'形式の日時文字列に変換する
+ */
+function timestamp2datetime(int $timestamp): string
 {
   return date('Y-m-d H:i:s', $timestamp);
 }
