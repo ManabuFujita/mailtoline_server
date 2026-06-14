@@ -56,15 +56,13 @@ function processFilter($f, $db, $dateStart, $dateEnd)
 
     $filter_list = [];
 
-    $messages = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
+    $result = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
+    $messages = $result['messages'];
+    $sendLogs = $result['sendLogs'];
 
     // Line通知
     if ($messages != '')
     {
-      // echo '<br>';
-      // echo 'Line通知';
-      // echo '<br>';
-
       $messages
         = '💡メール通知' . "\n"
         . "\n"
@@ -73,7 +71,18 @@ function processFilter($f, $db, $dateStart, $dateEnd)
       // echo '<pre>';
       // print_r($filter_list);
       // echo '</pre>';
-      push($lineId, $messages);
+
+      // LINEに通知
+      $isSucceeded = push($lineId, $messages);
+
+      // 送信が正常に終了してからDB登録
+      if ($isSucceeded)
+      {
+        foreach ($sendLogs as $log)
+        {
+          $db->insertSendlog($lineId, $gmailAddress, $log['mailId'], $log['subject'], $log['from'], $log['now']);
+        }
+      }
     }
   }
 }
@@ -99,6 +108,7 @@ function buildFilter($f, $dateStart, $dateEnd)
 function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress)
 {
   $messages = '';
+  $sendLogs = [];
   foreach ($filter_results->getMessages() as $r)
   {
     $mailId = $r->getId();
@@ -106,12 +116,10 @@ function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAdd
     // echo "mailId:" . $mailId;
 
     // 送信済みチェック
-    // 同一IDは再送しない
+    // 同一mailIDは再送しない
     if ($db->isSended($lineId, $gmailAddress, $mailId))
     {
-      // echo '<br>';
-      // echo '通知済み';
-      // echo '<br>';
+      // 通知済みのメールはスキップ
     } else {
 
       // ToDo:メール内容取得
@@ -125,22 +133,24 @@ function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAdd
       {
         $messages .= "\n" . "\n" . '--------------------' . "\n" . "\n";
       }
-      $messages
-        .= '■Date:' . "\n". $data['date']
-        . "\n" . '■From:' . "\n". $data['from']
-        . "\n" . '■Subject:' . "\n". $data['subject']
-        ;
+      $messages .= formatMessage($data);
 
-      // DB登録
+      // DB登録（送信後にまとめて登録するため、ここではデータを集めるだけ）
       $now = new DateTimeImmutable();
-      // echo '<br>';
-      // echo 'DB登録';
-      // echo '<br>';
-      $db->insertSendlog($lineId, $gmailAddress, $mailId, $data['subject'], $data['from'], $now);
+      $sendLogs[] = ['mailId' => $mailId, 'subject' => $data['subject'], 'from' => $data['from'], 'now' => $now];
     }
   }
 
-  return $messages;
+  return ['messages' => $messages, 'sendLogs' => $sendLogs];
+}
+
+// 通知メッセージのフォーマット
+function formatMessage($data)
+{
+  return '■Date:' . "\n". $data['date']
+    . "\n" . '■From:' . "\n". $data['from']
+    . "\n" . '■Subject:' . "\n". $data['subject']
+    ;
 }
 
 function getData($headers)

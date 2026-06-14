@@ -143,6 +143,8 @@ function push($lineId, $message)
   // echo '<pre>';
   // print_r($response);
   // echo '</pre>';
+
+  return $response->isSucceeded();
 }
 
 // ブロードキャスト
