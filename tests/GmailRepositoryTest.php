@@ -133,28 +133,24 @@ class GmailRepositoryTest extends TestCase
         $this->assertFalse($this->db->isSended(self::LINE_ID, self::EMAIL, 'unknown-mail-id'));
     }
 
-    // getSendlogCountThisMonth()が今月分の送信履歴がない場合に0を返すことを確認する
-    public function testGetSendlogCountThisMonthReturnsZeroWhenNoLogsThisMonth()
+    // getSendCountThisMonth()が未登録の場合に0を返すことを確認する
+    public function testGetSendCountThisMonthReturnsZeroWhenNotRegistered()
     {
-        $count = $this->db->getSendlogCountThisMonth(self::LINE_ID, new DateTimeImmutable());
+        $count = $this->db->getSendCountThisMonth(self::LINE_ID, new DateTimeImmutable());
 
         $this->assertSame(0, $count);
     }
 
-    // getSendlogCountThisMonth()が今月分の送信履歴のみを数えることを確認する
-    public function testGetSendlogCountThisMonthCountsLogsInCurrentMonth()
+    // incrementSendCount()を呼ぶたびに、今月の送信回数が1ずつ増えることを確認する
+    public function testIncrementSendCountIncreasesCountThisMonth()
     {
         $now = new DateTimeImmutable();
 
-        // 今月分の送信ログを追加で投入する
-        $this->pdo->exec(
-            "INSERT INTO sendlogs (line_id, email, mail_id, senddate, title, mail_from)"
-            . " VALUES ('" . self::LINE_ID . "', '" . self::EMAIL . "', 'this-month-mail-id', '" . $now->format('Y-m-d H:i:s') . "', 'テストタイトル2', 'from@example.com')"
-        );
+        $this->db->incrementSendCount(self::LINE_ID, $now);
+        $this->db->incrementSendCount(self::LINE_ID, $now);
 
-        $count = $this->db->getSendlogCountThisMonth(self::LINE_ID, $now);
+        $count = $this->db->getSendCountThisMonth(self::LINE_ID, $now);
 
-        // 2000-01-01付の既存ログは数えず、今月分の1件のみを数える
-        $this->assertSame(1, $count);
+        $this->assertSame(2, $count);
     }
 }
