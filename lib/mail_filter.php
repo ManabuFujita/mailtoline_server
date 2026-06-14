@@ -114,7 +114,9 @@ function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $
   {
     $filter .= ' subject:' . $f['subject'] . '';
   }
-  $filter .= ' after:' . $dateStart->format('Y/m/d') . ' before:' . $dateEnd->format('Y/m/d');
+  // after:/before:に日付のみを指定するとUTCの日境界で評価されJSTとずれるため、
+  // Unixタイムスタンプで指定して正確な時刻境界で絞り込む
+  $filter .= ' after:' . $dateStart->getTimestamp() . ' before:' . $dateEnd->getTimestamp();
 
   return $filter;
 }
