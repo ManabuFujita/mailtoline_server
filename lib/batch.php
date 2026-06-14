@@ -55,7 +55,7 @@ function runBatch()
   debugEcho('バッチ処理開始');
 
   // メールアドレスリスト取得
-  $db = new Mail_gmail;
+  $db = new GmailRepository;
   $emailList = $db->getAllGmail();
   // echo '<pre>';
   // print_r($list);

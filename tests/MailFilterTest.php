@@ -2,14 +2,14 @@
 
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../model/Mail_gmail.php';
+require_once __DIR__ . '/../model/GmailRepository.php';
 require_once __DIR__ . '/../lib/mail_filter.php';
 
 class MailFilterTest extends TestCase
 {
     public function testLogSentMessagesInsertsLogsWhenSucceeded()
     {
-        $db = $this->createMock(Mail_gmail::class);
+        $db = $this->createMock(GmailRepository::class);
         $db->expects($this->exactly(2))
             ->method('insertSendlog');
 
@@ -23,7 +23,7 @@ class MailFilterTest extends TestCase
 
     public function testLogSentMessagesDoesNothingWhenFailed()
     {
-        $db = $this->createMock(Mail_gmail::class);
+        $db = $this->createMock(GmailRepository::class);
         $db->expects($this->never())
             ->method('insertSendlog');
 

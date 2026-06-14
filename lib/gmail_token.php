@@ -12,7 +12,7 @@ function newGmailClient(): Google_Client
   return $client;
 }
 
-function updateTokens(Mail_gmail $db, array $emailList): void
+function updateTokens(GmailRepository $db, array $emailList): void
 {
   foreach ($emailList as $l)
   {
@@ -31,7 +31,7 @@ function updateTokens(Mail_gmail $db, array $emailList): void
   }
 }
 
-function updateToken(Mail_gmail $db, string $lineId, string $email, array $token): void
+function updateToken(GmailRepository $db, string $lineId, string $email, array $token): void
 {
   $client = newGmailClient();
 

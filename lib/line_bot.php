@@ -76,7 +76,7 @@ function reply(): void
         $replyMessage = '';
 
         // メールアドレスとフィルターが設定してあれば、設定を返す
-        $db = new Mail_gmail;
+        $db = new GmailRepository;
         $emailList = $db->getMyGmail($lineId);
         foreach ($emailList as $l)
         {

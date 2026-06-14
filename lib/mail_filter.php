@@ -1,6 +1,6 @@
 <?php
 
-function processFilter(array $f, Mail_gmail $db, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): void
+function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateStart, DateTimeImmutable $dateEnd): void
 {
   $gmailAddress = $f['email'];
   $lineId = $f['line_id'];
@@ -99,7 +99,7 @@ function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $
   return $filter;
 }
 
-function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, Mail_gmail $db, string $lineId, string $gmailAddress): array
+function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, GmailRepository $db, string $lineId, string $gmailAddress): array
 {
   $messages = '';
   $sendLogs = [];
@@ -139,7 +139,7 @@ function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results
 }
 
 // 送信が成功した場合のみ、送信履歴をDBに登録する
-function logSentMessages(string $lineId, string $gmailAddress, array $sendLogs, Mail_gmail $db, bool $isSucceeded): void
+function logSentMessages(string $lineId, string $gmailAddress, array $sendLogs, GmailRepository $db, bool $isSucceeded): void
 {
   if (!$isSucceeded)
   {
