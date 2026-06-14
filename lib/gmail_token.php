@@ -42,6 +42,8 @@ function updateTokens(GmailRepository $db, array $emailList): void
  */
 function updateToken(GmailRepository $db, string $lineId, string $email, array $token): void
 {
+  debugEcho('処理開始: ' . $email);
+
   $client = newGmailClient();
 
   $client->setAccessToken($token);
@@ -62,9 +64,9 @@ function updateToken(GmailRepository $db, string $lineId, string $email, array $
     // DB更新
     $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
 
-    debugEcho('Gmailトークンを更新しました。: ' . $email);
+    debugEcho('　Gmailトークンを更新しました。: ' . $email);
   } else {
-    debugEcho('Gmailトークンの更新不要。: ' . $email);
+    debugEcho('　Gmailトークンの更新不要。: ' . $email);
   }
 }
 

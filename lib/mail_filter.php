@@ -7,6 +7,9 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
 {
   $gmailAddress = $f['email'];
   $lineId = $f['line_id'];
+
+  debugEcho('　フィルター処理開始: ' . $gmailAddress);
+
   $token = getToken($f);
 
   // 今月のLINE送信回数が上限に達していれば、これ以上送信しない
@@ -45,21 +48,15 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
 
   $filter = buildFilter($f, $dateStart, $dateEnd);
 
-
+  debugEcho('　　filter: ' . $filter . ' (' . $dateStart->format('Y-m-d H:i:s') . ' 〜 ' . $dateEnd->format('Y-m-d H:i:s') . ')');
 
   $optParams['q'] = $filter;
   $filter_results = $service->users_messages->listUsersMessages($user, $optParams);
   $resultsCount = $filter_results['resultSizeEstimate'];
 
-  // echo '<pre>';
-  // print_r($filter_results);
-  // echo '</pre>';
-
-
+  debugEcho('　　抽出結果: ' . $resultsCount . '件');
 
   // 対象メールがなければ終了
-  // echo '<br>';
-  // echo '昨日〜今日の通知対象メール数：'.$resultsCount.'件<br>';
   if ($resultsCount == 0)
   {
     // echo "今日は通知対象のメールがありません。";
@@ -70,6 +67,13 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
     $result = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
     $messages = $result['messages'];
     $sendLogs = $result['sendLogs'];
+    $formattedMessages = $result['formattedMessages'];
+
+    debugEcho('　　メッセージ内容:');
+    foreach ($formattedMessages as $formattedMessage)
+    {
+      debugEcho('　　 ' . $formattedMessage);
+    }
 
     // Line通知
     if ($messages != '')
@@ -124,12 +128,13 @@ function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $
 /**
  * 検索結果のメールから未送信分の通知メッセージと送信ログ用データを組み立てる
  *
- * @return array{messages: string, sendLogs: array} 通知メッセージ本文と送信ログ用データの配列
+ * @return array{messages: string, sendLogs: array, formattedMessages: array<string>} 通知メッセージ本文・送信ログ用データ・メールごとの本文の配列
  */
 function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, GmailRepository $db, string $lineId, string $gmailAddress): array
 {
   $messages = '';
   $sendLogs = [];
+  $formattedMessages = [];
   foreach ($filter_results->getMessages() as $r)
   {
     $mailId = $r->getId();
@@ -154,7 +159,9 @@ function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results
       {
         $messages .= "\n" . "\n" . '--------------------' . "\n" . "\n";
       }
-      $messages .= formatMessage($data);
+      $formattedMessage = formatMessage($data);
+      $messages .= $formattedMessage;
+      $formattedMessages[] = $formattedMessage;
 
       // DB登録（送信後にまとめて登録するため、ここではデータを集めるだけ）
       $now = new DateTimeImmutable();
@@ -162,7 +169,7 @@ function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results
     }
   }
 
-  return ['messages' => $messages, 'sendLogs' => $sendLogs];
+  return ['messages' => $messages, 'sendLogs' => $sendLogs, 'formattedMessages' => $formattedMessages];
 }
 
 /**

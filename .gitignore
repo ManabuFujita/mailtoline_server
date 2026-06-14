@@ -35,3 +35,4 @@ config/prod.php
 config/dev.php
 logs/*
 deploy.sh
+.claude/settings.json
