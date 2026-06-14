@@ -1,6 +1,6 @@
 <?php
 
-class FuncFile
+class FileStore
 {
     private $filename;
 
