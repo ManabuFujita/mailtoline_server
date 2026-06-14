@@ -13,6 +13,7 @@ define('LOG_RUN', Config::get('batch_log_run'));
 define('LOG_ERROR', Config::get('batch_log_error'));
 define('BATCH_LAST_RUN_FILE', Config::get('batch_last_run_file'));
 define('BATCH_RUN_TIMES', Config::get('batch_run_times'));
+define('MONTHLY_SEND_LIMIT', Config::get('monthly_send_limit'));
 
 require_once('vendor/autoload.php');
 require_once('model/FileStore.php');
