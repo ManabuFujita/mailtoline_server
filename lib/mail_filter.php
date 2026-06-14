@@ -76,13 +76,7 @@ function processFilter($f, $db, $dateStart, $dateEnd)
       $isSucceeded = push($lineId, $messages);
 
       // 送信が正常に終了してからDB登録
-      if ($isSucceeded)
-      {
-        foreach ($sendLogs as $log)
-        {
-          $db->insertSendlog($lineId, $gmailAddress, $log['mailId'], $log['subject'], $log['from'], $log['now']);
-        }
-      }
+      logSentMessages($lineId, $gmailAddress, $sendLogs, $db, $isSucceeded);
     }
   }
 }
@@ -142,6 +136,20 @@ function buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAdd
   }
 
   return ['messages' => $messages, 'sendLogs' => $sendLogs];
+}
+
+// 送信が成功した場合のみ、送信履歴をDBに登録する
+function logSentMessages($lineId, $gmailAddress, $sendLogs, $db, $isSucceeded)
+{
+  if (!$isSucceeded)
+  {
+    return;
+  }
+
+  foreach ($sendLogs as $log)
+  {
+    $db->insertSendlog($lineId, $gmailAddress, $log['mailId'], $log['subject'], $log['from'], $log['now']);
+  }
 }
 
 // 通知メッセージのフォーマット
