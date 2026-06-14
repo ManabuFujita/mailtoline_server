@@ -11,7 +11,7 @@ $line_channel_secret = Config::get('line_channel_secret');
 define('ADMIN_EMAIL', Config::get('mail_admin'));
 define('LOG_RUN', Config::get('batch_log_run'));
 define('LOG_ERROR', Config::get('batch_log_error'));
-define('BATCH_STATE_FILE', Config::get('batch_state_file'));
+define('BATCH_LAST_RUN_FILE', Config::get('batch_last_run_file'));
 define('BATCH_RUN_TIMES', Config::get('batch_run_times'));
 
 require_once('vendor/autoload.php');

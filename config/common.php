@@ -3,7 +3,7 @@ return [
     // バッチ設定
     'batch_log_run' => __DIR__ . '/../logs/batch_run.log',
     'batch_log_error' => __DIR__ . '/../logs/batch_error.log',
-    'batch_state_file' => __DIR__ . '/../logs/batch_state.txt',
+    'batch_last_run_file' => __DIR__ . '/../logs/batch_last_run.txt',
 
     // バッチ実行対象の時刻（この時刻を過ぎてから最初の1回だけ実行する）
     // ※日付が変わる直前（23:59など）を指定すると、日付をまたぐタイミングで
