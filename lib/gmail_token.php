@@ -25,7 +25,7 @@ function updateTokens($db, $emailList)
       updateToken($db, $lineId, $email, $token);
 
     } catch (Exception $e) {
-      writeLog(LOG_ERROR, '[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage());
+      // writeLog(LOG_ERROR, '[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage());
       continue;
     }
   }
