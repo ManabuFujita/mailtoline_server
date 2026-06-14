@@ -9,9 +9,9 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
   $lineId = $f['line_id'];
   $token = getToken($f);
 
-  // 今月の送信件数が上限に達していれば、これ以上送信しない
+  // 今月のLINE送信回数が上限に達していれば、これ以上送信しない
   $now = new DateTimeImmutable();
-  $remaining = MONTHLY_SEND_LIMIT - $db->getSendlogCountThisMonth($lineId, $now);
+  $remaining = MONTHLY_SEND_LIMIT - $db->getSendCountThisMonth($lineId, $now);
   if ($remaining <= 0)
   {
     return;
@@ -67,7 +67,7 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
 
     $filter_list = [];
 
-    $result = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress, $remaining);
+    $result = buildMessages($filter_results, $service, $user, $db, $lineId, $gmailAddress);
     $messages = $result['messages'];
     $sendLogs = $result['sendLogs'];
 
@@ -79,15 +79,21 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
         . "\n"
         . $messages;
 
-      // echo '<pre>';
-      // print_r($filter_list);
-      // echo '</pre>';
+      // 今回の送信（1回分）で今月の上限に達する場合、上限到達のメッセージを一緒に送信する
+      if ($remaining <= 1)
+      {
+        $messages .= "\n" . "\n" . '⚠️今月の送信上限（' . MONTHLY_SEND_LIMIT . '件）に達しました。来月まで通知は送信されません。';
+      }
 
       // LINEに通知
       $isSucceeded = push($lineId, $messages);
 
-      // 送信が正常に終了してからDB登録
+      // 送信が正常に終了してからDB登録・送信回数を更新
       logSentMessages($lineId, $gmailAddress, $sendLogs, $db, $isSucceeded);
+      if ($isSucceeded)
+      {
+        $db->incrementSendCount($lineId, $now);
+      }
     }
   }
 }
@@ -116,21 +122,14 @@ function buildFilter(array $f, DateTimeImmutable $dateStart, DateTimeImmutable $
 /**
  * 検索結果のメールから未送信分の通知メッセージと送信ログ用データを組み立てる
  *
- * @param int $limit 今月あと何件まで送信できるか（この件数を超えるメールは処理しない）
  * @return array{messages: string, sendLogs: array} 通知メッセージ本文と送信ログ用データの配列
  */
-function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, GmailRepository $db, string $lineId, string $gmailAddress, int $limit): array
+function buildMessages(Google_Service_Gmail_ListMessagesResponse $filter_results, Google_Service_Gmail $service, string $user, GmailRepository $db, string $lineId, string $gmailAddress): array
 {
   $messages = '';
   $sendLogs = [];
   foreach ($filter_results->getMessages() as $r)
   {
-    // 今月の送信上限に達した場合、これ以上は処理しない
-    if (count($sendLogs) >= $limit)
-    {
-      break;
-    }
-
     $mailId = $r->getId();
     // echo "<br>";
     // echo "mailId:" . $mailId;

@@ -237,31 +237,51 @@ class GmailRepository extends Database
   }
 
   /**
-   * 指定したline_idについて、指定した日時が含まれる月の送信件数を取得する
+   * 指定したline_idについて、指定した日時が含まれる月のLINE送信回数を取得する
    */
-  public function getSendlogCountThisMonth(string $lineId, DateTimeImmutable $now): int
+  public function getSendCountThisMonth(string $lineId, DateTimeImmutable $now): int
   {
     try {
-      $monthStart = $now->modify('first day of this month')->format('Y-m-d 00:00:00');
-      $monthEnd = $now->modify('first day of next month')->format('Y-m-d 00:00:00');
-
-      $sql = "SELECT COUNT(*) FROM sendlogs"
-        . " WHERE line_id = :line_id AND senddate >= :month_start AND senddate < :month_end";
+      $sql = "SELECT send_count FROM sendcounts WHERE line_id = :line_id AND target_month = :target_month";
 
       $stmh = $this->pdo->prepare($sql);
 
       $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
-      $stmh->bindValue(':month_start', $monthStart, PDO::PARAM_STR);
-      $stmh->bindValue(':month_end', $monthEnd, PDO::PARAM_STR);
+      $stmh->bindValue(':target_month', $now->format('Y-m'), PDO::PARAM_STR);
 
       $stmh->execute();
 
-      return (int)$stmh->fetchColumn();
+      $count = $stmh->fetchColumn();
+
+      return $count === false ? 0 : (int)$count;
 
     } catch (PDOException $Exception) {
 
       print "エラー:".$Exception->getMessage();
       return 0;
+    }
+  }
+
+  /**
+   * 指定したline_idについて、指定した日時が含まれる月のLINE送信回数を1増やす
+   */
+  public function incrementSendCount(string $lineId, DateTimeImmutable $now): void
+  {
+    try {
+      $sql = "INSERT INTO sendcounts (line_id, target_month, send_count)"
+        . " VALUES (:line_id, :target_month, 1)"
+        . " ON DUPLICATE KEY UPDATE send_count = send_count + 1";
+
+      $stmh = $this->pdo->prepare($sql);
+
+      $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
+      $stmh->bindValue(':target_month', $now->format('Y-m'), PDO::PARAM_STR);
+
+      $stmh->execute();
+
+    } catch (PDOException $Exception) {
+
+      print "エラー:".$Exception->getMessage();
     }
   }
 
