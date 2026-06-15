@@ -103,6 +103,27 @@ class GmailRepositoryTest extends TestCase
         $this->assertSame('テスト件名', $found['subject']);
     }
 
+    // clearToken()がリフレッシュトークンを空にすることを確認する
+    public function testClearTokenEmptiesRefreshToken()
+    {
+        $this->db->clearToken(self::LINE_ID, self::EMAIL);
+
+        $list = $this->db->getAllFilterWithToken();
+
+        $found = null;
+        foreach ($list as $row)
+        {
+            if ($row['line_id'] === self::LINE_ID && $row['email'] === self::EMAIL)
+            {
+                $found = $row;
+                break;
+            }
+        }
+
+        $this->assertNotNull($found);
+        $this->assertSame('', $found['refresh_token']);
+    }
+
     // getMyFilter()が指定したline_id/emailのフィルターを返すことを確認する
     public function testGetMyFilterReturnsFilterForLineIdAndEmail()
     {

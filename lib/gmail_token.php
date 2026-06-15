@@ -44,6 +44,13 @@ function updateToken(GmailRepository $db, string $lineId, string $email, array $
 {
   debugEcho('処理開始: ' . $email);
 
+  // リフレッシュトークンが無効化されている場合（再認可が必要）は処理しない
+  if (empty($token['refresh_token']))
+  {
+    debugEcho('　リフレッシュトークンが削除済みのため処理をスキップします。: ' . $email);
+    return;
+  }
+
   $client = newGmailClient();
 
   $client->setAccessToken($token);
