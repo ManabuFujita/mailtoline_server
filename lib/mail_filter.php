@@ -35,18 +35,7 @@ function processFilter(array $f, GmailRepository $db, DateTimeImmutable $dateSta
   // print_r($token);
   // echo '</pre>';
 
-  // 必要があれば処理を続ける
-  try {
-    $client = getGmailClient($token);
-  } catch (Exception $e) {
-    // リフレッシュトークンが無効な場合、再認可が必要なためトークンをクリアする
-    // （クリア後は次回以降の処理をスキップし、エラー通知が繰り返されないようにする）
-    if (str_contains($e->getMessage(), 'invalid_grant'))
-    {
-      $db->clearToken($lineId, $gmailAddress);
-    }
-    throw $e;
-  }
+  $client = getGmailClient($token);
 
 
   $filter_mailfrom = $f['mail_from'];
