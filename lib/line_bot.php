@@ -23,6 +23,9 @@ function handleWebhook(): void
   if (validateSignature($request_body, $signature))
   {
     reply($request_body, $signature);
+  } else {
+    // 署名検証エラー（チャネルシークレット不一致の可能性）
+    writeLog(LOG_ERROR, '[LINE Webhook署名検証エラー] x-line-signature=' . $signature . ' body=' . $request_body);
   }
 }
 
