@@ -49,6 +49,25 @@ class GmailRepository extends Database
   }
 
   /**
+   * 指定したline_id/emailのリフレッシュトークンをクリアする（再認可が必要な状態にする）
+   */
+  public function clearToken(string $lineId, string $email): void
+  {
+    try {
+      $sql = "UPDATE " . $this->table_gmail . " SET refresh_token = ''"
+        . " WHERE line_id = :line_id AND email = :email";
+
+      $stmh = $this->pdo->prepare($sql);
+      $stmh->bindValue(':line_id', $lineId, PDO::PARAM_STR);
+      $stmh->bindValue(':email', $email, PDO::PARAM_STR);
+      $stmh->execute();
+    } catch (PDOException $Exception) {
+
+      print "エラー:".$Exception->getMessage();
+    }
+  }
+
+  /**
    * 登録済みの全Gmailアカウントを取得する
    */
   public function getAllGmail(): array|null
