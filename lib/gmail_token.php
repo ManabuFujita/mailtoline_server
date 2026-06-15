@@ -27,8 +27,16 @@ function updateTokens(GmailRepository $db, array $emailList): void
       $email = $l['email'];
       $token = getToken($l);
 
-      // トークンは更新しづづける
-      updateToken($db, $lineId, $email, $token);
+      // リフレッシュトークンが無効化されている場合（再認可が必要）は処理しない
+      if (isRefreshTokenCleared($token))
+      {
+        debugEcho('　リフレッシュトークンが削除済みのため処理をスキップします。: ' . $email);
+      } else {
+        // トークンは更新しづづける
+        debugEcho('トークン更新処理開始: ' . $email);
+        updateToken($db, $lineId, $email, $token);
+        debugEcho('トークン更新処理終了: ' . $email);
+      }
 
     } catch (Exception $e) {
       // writeLog(LOG_ERROR, '[トークン更新エラー] ' . $l['email'] . ' : ' . $e->getMessage());
@@ -38,43 +46,56 @@ function updateTokens(GmailRepository $db, array $emailList): void
 }
 
 /**
+ * リフレッシュトークンが削除済み(再認可が必要)かどうかを判定する
+ */
+function isRefreshTokenCleared(array $token): bool
+{
+  return empty($token['refresh_token']);
+}
+
+/**
  * Gmailトークンが期限切れの場合、リフレッシュしてDBを更新する
  */
 function updateToken(GmailRepository $db, string $lineId, string $email, array $token): void
 {
-  debugEcho('処理開始: ' . $email);
-
-  // リフレッシュトークンが無効化されている場合（再認可が必要）は処理しない
-  if (empty($token['refresh_token']))
-  {
-    debugEcho('　リフレッシュトークンが削除済みのため処理をスキップします。: ' . $email);
-    return;
-  }
-
   $client = newGmailClient();
 
   $client->setAccessToken($token);
 
-  // トークンが期限切れの場合は更新する
-  if ($client->isAccessTokenExpired())
+  // トークンが期限切れでなければ更新不要
+  if (!$client->isAccessTokenExpired())
   {
-    $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
-
-    $token = $client->getAccessToken();
-    $accessToken = $token['access_token'];
-    $refreshToken = $token['refresh_token'];
-    $idToken = $token['id_token'];
-    $expiresIn = $token['expires_in'];
-    // $created = date('Y-m-d H:i:s', $token['created']);
-    $created = timestamp2datetime($token['created']);
-
-    // DB更新
-    $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
-
-    debugEcho('　Gmailトークンを更新しました。: ' . $email);
-  } else {
     debugEcho('　Gmailトークンの更新不要。: ' . $email);
+    return;
   }
+
+  $creds = $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
+
+  // リフレッシュトークンが無効な場合、エラーがcredsに含まれる（例外は発生しない）
+  if (isset($creds['error']))
+  {
+    debugEcho('　リフレッシュトークンが無効です（' . $creds['error'] . '）。リフレッシュトークンをクリアします。: ' . $email);
+    $db->clearToken($lineId, $email);
+    return;
+  }
+
+  saveRefreshedToken($db, $lineId, $email, $client->getAccessToken());
+
+  debugEcho('　Gmailトークンを更新しました。: ' . $email);
+}
+
+/**
+ * リフレッシュ後のトークンをDBに保存する
+ */
+function saveRefreshedToken(GmailRepository $db, string $lineId, string $email, array $token): void
+{
+  $accessToken = $token['access_token'];
+  $refreshToken = $token['refresh_token'];
+  $idToken = $token['id_token'];
+  $expiresIn = $token['expires_in'];
+  $created = timestamp2datetime($token['created']);
+
+  $db->updateToken($lineId, $email, $accessToken, $refreshToken, $idToken, $expiresIn, $created);
 }
 
 /**
@@ -120,7 +141,12 @@ function getGmailClient(array $token): Google_Client
     if ($client->isAccessTokenExpired()) {
         // Refresh the token if possible, else fetch a new one.
         if ($client->getRefreshToken()) {
-            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+            $creds = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+
+            // リフレッシュトークンが無効な場合、エラーがcredsに含まれる（例外は発生しない）
+            if (isset($creds['error'])) {
+                throw new Exception($creds['error'] . ': ' . ($creds['error_description'] ?? ''));
+            }
         } else {
             // Request authorization from the user.
             $authUrl = $client->createAuthUrl();

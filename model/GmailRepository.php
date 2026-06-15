@@ -36,15 +36,15 @@ class GmailRepository extends Database
               . "'";
 
       $stmh = $this->pdo->query($sql);
-      
+
       $this->pdo->commit(); // トランザクション終了
 
-      print "Tokenを更新しました。<br>";
+      debugEcho('Tokenを更新しました。');
     } catch (PDOException $Exception) {
 
       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
     }
   }
 
@@ -63,7 +63,7 @@ class GmailRepository extends Database
       $stmh->execute();
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
     }
   }
 
@@ -86,7 +86,7 @@ class GmailRepository extends Database
       
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return null;
     }
     
@@ -110,7 +110,7 @@ class GmailRepository extends Database
       
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return null;
     }
     
@@ -157,7 +157,7 @@ class GmailRepository extends Database
       
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return null;
     }
     
@@ -190,7 +190,7 @@ class GmailRepository extends Database
       
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return null;
     }
     
@@ -226,7 +226,7 @@ class GmailRepository extends Database
 
       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
     }
   }
 
@@ -250,7 +250,7 @@ class GmailRepository extends Database
       
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return null;
     }
   }
@@ -276,7 +276,7 @@ class GmailRepository extends Database
 
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return 0;
     }
   }
@@ -300,7 +300,7 @@ class GmailRepository extends Database
 
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
     }
   }
 
@@ -318,7 +318,7 @@ class GmailRepository extends Database
       
     } catch (PDOException $Exception) {
 
-      print "エラー:".$Exception->getMessage();
+      debugEcho('エラー: ' . $Exception->getMessage());
       return null;
     }
   }
@@ -341,7 +341,7 @@ class GmailRepository extends Database
       
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //       return null;
 //     } 
 //   }
@@ -351,7 +351,7 @@ class GmailRepository extends Database
 //     try {
 //       $stmh = $this->pdo->query($sql);
 //     } catch (PDOException $Exception) {
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     } 
 //   }
   
@@ -380,7 +380,7 @@ class GmailRepository extends Database
       
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //     return null;
 //   }
@@ -435,7 +435,7 @@ class GmailRepository extends Database
       
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //       return null;
 //     }
     
@@ -463,7 +463,7 @@ class GmailRepository extends Database
       
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //       return null;
 //     } 
 //   }
@@ -481,7 +481,7 @@ class GmailRepository extends Database
       
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //       return null;
 //     } 
 //   }
@@ -550,7 +550,7 @@ class GmailRepository extends Database
       
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //       return null;
 //     }
     
@@ -585,7 +585,7 @@ class GmailRepository extends Database
 
 //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //   }
 
@@ -610,7 +610,7 @@ class GmailRepository extends Database
 
 //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //   }
 
@@ -633,7 +633,7 @@ class GmailRepository extends Database
 //       print "データを".$stmh->rowCount()."件、挿入しました。";
 //     } catch (PDOException $Exception) {
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //   }
 
@@ -660,7 +660,7 @@ class GmailRepository extends Database
 
 // //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-// //       print "エラー:".$Exception->getMessage();
+// //       debugEcho('エラー: ' . $Exception->getMessage());
 // //     }
 
 // //     try {
@@ -678,7 +678,7 @@ class GmailRepository extends Database
 
 // //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-// // //      print "エラー:".$Exception->getMessage();
+// // //      debugEcho('エラー: ' . $Exception->getMessage());
 // //     }
 // //   }
 
@@ -803,7 +803,7 @@ class GmailRepository extends Database
 
 //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //   }
 
@@ -838,7 +838,7 @@ class GmailRepository extends Database
 
 //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //   }
 
@@ -863,7 +863,7 @@ class GmailRepository extends Database
 
 //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-//       print "エラー:".$Exception->getMessage();
+//       debugEcho('エラー: ' . $Exception->getMessage());
 //     }
 //   }
 
@@ -911,7 +911,7 @@ class GmailRepository extends Database
 
 // //       $this->pdo->rollBack(); // トランザクション失敗の場合、処理を戻す
 
-// //       print "エラー:".$Exception->getMessage();
+// //       debugEcho('エラー: ' . $Exception->getMessage());
 // //     }
 // //   }
   
