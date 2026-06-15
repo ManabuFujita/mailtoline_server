@@ -27,16 +27,16 @@ function debugEcho(string $message, bool $breakBefore = false): void
 function notifyAdmin(string $email, string $errorMessage): void
 {
     // 開発環境ではメール送信しない
-    if (!Config::isProd())
+    if (Config::isProd())
     {
-      return;
+      $to = ADMIN_EMAIL; // 管理者メールアドレス
+      $subject = '[mailtoline:エラー] バッチ処理でエラーが発生しました';
+      $body = "対象メールアドレス: " . $email . "\n"
+            . "エラー内容: " . $errorMessage . "\n"
+            . "発生日時: " . date('Y-m-d H:i:s');
+
+      mail($to, $subject, $body);
     }
 
-    $to = ADMIN_EMAIL; // 管理者メールアドレス
-    $subject = '[mailtoline:エラー] バッチ処理でエラーが発生しました';
-    $body = "対象メールアドレス: " . $email . "\n"
-          . "エラー内容: " . $errorMessage . "\n"
-          . "発生日時: " . date('Y-m-d H:i:s');
-
-    mail($to, $subject, $body);
+    debugEcho('メール送信しました（開発環境は実際はメール送信しない）: ' . $email . ' : ' . $errorMessage);
 }
