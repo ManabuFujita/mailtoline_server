@@ -14,9 +14,7 @@ function writeLog(string $file, string $message): void
  */
 function debugEcho(string $message, bool $breakBefore = false): void
 {
-  $env = getenv('APP_ENV') ?: 'dev';
-
-  if ($env === 'dev')
+  if (!Config::isProd())
   {
     $prefix = $breakBefore ? '<br>' : '';
     echo $prefix . '[' . date('Y-m-d H:i:s') . '] ' . $message . "<br>\n";
