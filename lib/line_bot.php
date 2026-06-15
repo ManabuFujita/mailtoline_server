@@ -85,7 +85,12 @@ function reply(string $inputData, string $signature): void
     // 送信処理
     $textMessageBuilder = new TextMessageBuilder($replyMessage);
     $sendMessage->add($textMessageBuilder);
-    $bot->replyMessage($event->getReplyToken(), $sendMessage);
+    $response = $bot->replyMessage($event->getReplyToken(), $sendMessage);
+
+    if (!$response->isSucceeded())
+    {
+      writeLog(LOG_ERROR, '[LINE返信エラー] ' . $response->getHTTPStatus() . ' : ' . $response->getRawBody());
+    }
   }
 }
 
