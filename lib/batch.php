@@ -80,6 +80,12 @@ function runBatch()
     try {
       processFilter($f, $db, $dateStart, $dateEnd);
     } catch (Exception $e) {
+      // 認証エラーの場合はリフレッシュトークンをクリアして再通知を防ぐ
+      if (str_contains($e->getMessage(), 'invalid_grant')
+          || str_contains($e->getMessage(), 'UNAUTHENTICATED'))
+      {
+        $db->clearToken($f['line_id'], $f['email']);
+      }
       writeLog(LOG_ERROR, '[バッチエラー] ' . $f['email'] . ' : ' . $e->getMessage());
       notifyAdmin($f['email'], $e->getMessage());
       continue;
